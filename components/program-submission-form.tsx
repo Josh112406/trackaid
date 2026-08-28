@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import {
+  BadgeCheck,
   CheckCircle2,
   CircleAlert,
   FileCheck2,
@@ -33,7 +34,13 @@ async function sha256(value: string) {
   ).join("");
 }
 
-export function ProgramSubmissionForm() {
+export function ProgramSubmissionForm({
+  mode,
+  canPublish = false,
+}: {
+  mode: "public" | "admin";
+  canPublish?: boolean;
+}) {
   const [state, setState] = useState<"idle" | "loading" | "ready" | "blocked">(
     "idle",
   );
@@ -44,7 +51,13 @@ export function ProgramSubmissionForm() {
     const formElement = event.currentTarget;
     const submitter = (event.nativeEvent as SubmitEvent)
       .submitter as HTMLButtonElement | null;
-    const intent = submitter?.value === "review" ? "review" : "draft";
+    const requestedIntent = submitter?.value;
+    const intent =
+      requestedIntent === "publish" && canPublish
+        ? "publish"
+        : requestedIntent === "review"
+          ? "review"
+          : "draft";
     const form = new FormData(formElement);
     const supabase = createBrowserSupabaseClient();
 
@@ -55,8 +68,10 @@ export function ProgramSubmissionForm() {
       setState("blocked");
       setMessage(
         userError
-          ? "Your administrator session could not be verified. Sign in again."
-          : "Sign in as an invited owner or reviewer before adding a program.",
+          ? "Your session could not be verified. Sign in again."
+          : mode === "admin"
+            ? "Sign in as an invited administrator before adding a program."
+            : "Sign in with your email before submitting a program.",
       );
       return;
     }
@@ -124,13 +139,25 @@ export function ProgramSubmissionForm() {
       return;
     }
 
-    if (intent === "review") {
+    if (intent === "review" || intent === "publish") {
+      const now = new Date().toISOString();
+      const nextValues =
+        intent === "publish"
+          ? {
+              status: "approved" as const,
+              submitted_at: now,
+              reviewed_by: userData.user.id,
+              reviewed_at: now,
+              review_reason:
+                "Published directly by an authorized TrackAid administrator.",
+            }
+          : {
+              status: "submitted" as const,
+              submitted_at: now,
+            };
       const { data: reviewedSubmission, error: reviewError } = await supabase
         .from("program_submissions")
-        .update({
-          status: "submitted",
-          submitted_at: new Date().toISOString(),
-        })
+        .update(nextValues)
         .eq("id", submission.id)
         .eq("submitted_by", userData.user.id)
         .eq("status", "draft")
@@ -140,7 +167,7 @@ export function ProgramSubmissionForm() {
       if (reviewError || !reviewedSubmission) {
         setState("blocked");
         setMessage(
-          `The draft and proof were saved, but review submission failed: ${reviewError?.message ?? "no submission was updated"}`,
+          `The draft and proof were saved, but ${intent === "publish" ? "publication" : "review submission"} failed: ${reviewError?.message ?? "no submission was updated"}`,
         );
         return;
       }
@@ -148,9 +175,11 @@ export function ProgramSubmissionForm() {
 
     setState("ready");
     setMessage(
-      intent === "review"
-        ? "Campaign submitted for review with its proof attached."
-        : "Campaign and proof saved as a draft. You can submit it for review when it is ready.",
+      intent === "publish"
+        ? "Program published. Its proof and administrator approval were added to the audit trail."
+        : intent === "review"
+          ? "Program submitted for review with its proof attached."
+          : "Program and proof saved as a draft.",
     );
     formElement.reset();
   }
@@ -195,8 +224,8 @@ export function ProgramSubmissionForm() {
         <legend>First proof item</legend>
         <p>
           Pubmats, posts, websites, video, and news can demonstrate that a
-          fundraiser exists. Approval also requires organization registration or
-          representative authorization.
+          fundraiser exists. Organization registration or representative
+          authorization may be requested during review.
         </p>
         <div className="form-grid">
           <label>
@@ -238,25 +267,27 @@ export function ProgramSubmissionForm() {
       <div className="submission-safety-note">
         <FileCheck2 size={22} aria-hidden="true" />
         <p>
-          Private registration, authorization, and payout documents belong in
-          encrypted Supabase Storage. Only their SHA-256 fingerprints become
-          public or go on-chain.
+          Public evidence is recorded with a SHA-256 fingerprint. Never put
+          private identity, registration, authorization, or payout documents in
+          a public link.
         </p>
       </div>
       <div className="submission-actions">
-        <button
-          className="secondary-button"
-          name="intent"
-          value="draft"
-          type="submit"
-          disabled={state === "loading"}
-        >
-          Save draft
-        </button>
+        {mode === "admin" ? (
+          <button
+            className="secondary-button"
+            name="intent"
+            value="draft"
+            type="submit"
+            disabled={state === "loading"}
+          >
+            Save draft
+          </button>
+        ) : null}
         <button
           className="primary-button"
           name="intent"
-          value="review"
+          value={canPublish ? "publish" : "review"}
           type="submit"
           disabled={state === "loading"}
         >
@@ -264,12 +295,20 @@ export function ProgramSubmissionForm() {
             <LoaderCircle className="spin" size={18} aria-hidden="true" />
           ) : state === "ready" ? (
             <CheckCircle2 size={18} aria-hidden="true" />
+          ) : canPublish ? (
+            <BadgeCheck size={18} aria-hidden="true" />
           ) : (
             <Send size={18} aria-hidden="true" />
           )}
-          Submit for review
+          {canPublish ? "Publish program" : "Submit for review"}
         </button>
       </div>
+      {canPublish ? (
+        <p className="submission-action-note">
+          Publishing is immediate. TrackAid records your administrator account,
+          approval time, and evidence fingerprint in the audit trail.
+        </p>
+      ) : null}
       {message ? (
         <p className={`form-message form-message-${state}`} role="status">
           {state === "blocked" ? (

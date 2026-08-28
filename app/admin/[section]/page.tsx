@@ -171,7 +171,11 @@ function Programs({ rows }: { rows: Array<Record<string, unknown>> }) {
               </td>
               <td>{text(r.official_domain)}</td>
               <td>
-                <span className="table-status">{text(r.status)}</span>
+                <span
+                  className={`table-status table-status-${text(r.status).replaceAll("_", "-")}`}
+                >
+                  {text(r.status).replaceAll("_", " ")}
+                </span>
               </td>
               <td>{date(r.created_at)}</td>
               <td>
@@ -366,8 +370,8 @@ function Analytics({ rows }: { rows: Array<Record<string, unknown>> }) {
   const count = (kind: string) =>
     rows.filter((r) => r.event_kind === kind).length;
   const views = count("campaign_view"),
-    starts = count("checkout_started"),
-    paid = count("payment_confirmed");
+    starts = count("payment_intent_created"),
+    paid = count("payment_paid");
   return (
     <div className="evidence-kpi-grid">
       <article>

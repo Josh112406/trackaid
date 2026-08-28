@@ -45,7 +45,7 @@ export default function RootLayout({
             <Link href="/public-audit">Public audit</Link>
             <Link href="/how-it-works">How it works</Link>
             <Link href="/organizations">Organizations</Link>
-            <Link href="/admin">Admin</Link>
+            <Link href="/submit-program">Submit a program</Link>
           </nav>
         </header>
         {children}
@@ -60,7 +60,7 @@ export default function RootLayout({
             <Link href="/public-audit">Public audit</Link>
             <Link href="/blockchain">Blockchain</Link>
             <Link href="/verify">Organization verification</Link>
-            <Link href="/admin">Admin dashboard</Link>
+            <Link href="/submit-program">Submit a program</Link>
           </div>
         </footer>
       </body>

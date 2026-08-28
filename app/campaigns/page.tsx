@@ -29,6 +29,12 @@ export default async function CampaignDirectoryPage() {
             publishes its on-platform money trail.
           </p>
         </div>
+        <Link
+          className="primary-button campaign-submit-link"
+          href="/submit-program"
+        >
+          Submit a program
+        </Link>
       </section>
       <section className="campaign-directory-section">
         <div className="section-heading">
@@ -56,6 +62,9 @@ export default async function CampaignDirectoryPage() {
             </p>
             <Link className="text-link" href="/official-sources">
               Browse official organization sources
+            </Link>
+            <Link className="text-link" href="/submit-program">
+              Submit a program for review
             </Link>
           </div>
         )}

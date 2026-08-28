@@ -18,8 +18,9 @@ export default async function NewProgramSubmissionPage() {
         <span className="eyebrow">Manual fundraising program</span>
         <h1>Add the claim. Then prove it.</h1>
         <p>
-          Create a draft from an official organization-owned page and attach
-          public campaign evidence. Approval remains separate from submission.
+          Create a program from an official organization-owned page and attach
+          public campaign evidence. Owners and reviewers can publish it
+          immediately; auditor submissions still enter the review queue.
         </p>
       </div>
       {access.mode === "preview" ? (
@@ -34,7 +35,13 @@ export default async function NewProgramSubmissionPage() {
           </div>
         </div>
       ) : null}
-      <ProgramSubmissionForm />
+      <ProgramSubmissionForm
+        mode="admin"
+        canPublish={
+          access.mode === "authenticated" &&
+          (access.role === "owner" || access.role === "reviewer")
+        }
+      />
     </main>
   );
 }

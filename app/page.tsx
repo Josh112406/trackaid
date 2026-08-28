@@ -35,6 +35,9 @@ export default async function HomePage() {
             <Link className="secondary-button" href="/how-it-works">
               How verification works
             </Link>
+            <Link className="text-link" href="/submit-program">
+              Submit a program
+            </Link>
           </div>
           <p className="safety-note">
             Only verified, published campaigns can accept on-platform donations.
@@ -101,6 +104,9 @@ export default async function HomePage() {
             </p>
             <Link className="text-link" href="/organizations">
               Read the approval requirements <ArrowRight size={16} />
+            </Link>
+            <Link className="text-link" href="/submit-program">
+              Submit a program for review <ArrowRight size={16} />
             </Link>
           </div>
         )}
