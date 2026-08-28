@@ -1,145 +1,126 @@
-export const adminMetrics = [
-  {
-    label: "TrackAid payments",
-    value: "₱1,684,200",
-    change: "+12.4%",
-    tone: "moss",
-  },
-  {
-    label: "Confirmed disbursements",
-    value: "₱943,000",
-    change: "56.0% of funds",
-    tone: "clay",
-  },
-  {
-    label: "External redirects",
-    value: "1,248",
-    change: "+18.7%",
-    tone: "ochre",
-  },
-  {
-    label: "Programs awaiting review",
-    value: "7",
-    change: "2 need information",
-    tone: "terracotta",
-  },
-];
+import { createServerUserClient } from "@/lib/supabase/server";
 
-export const transactionRows = [
-  {
-    id: "pi_demo_0048",
-    campaign: "Typhoon response demonstration",
-    type: "Donation",
-    amount: "₱5,000",
-    status: "Paid",
-    time: "Aug 27, 12:42 PM",
-  },
-  {
-    id: "pi_demo_0047",
-    campaign: "Typhoon response demonstration",
-    type: "Donation",
-    amount: "₱2,500",
-    status: "Paid",
-    time: "Aug 27, 12:31 PM",
-  },
-  {
-    id: "rf_demo_0012",
-    campaign: "Flood response demonstration",
-    type: "Refund",
-    amount: "−₱1,000",
-    status: "Completed",
-    time: "Aug 27, 11:58 AM",
-  },
-  {
-    id: "ds_demo_0008",
-    campaign: "Typhoon response demonstration",
-    type: "Disbursement",
-    amount: "−₱84,500",
-    status: "Confirmed",
-    time: "Aug 27, 10:16 AM",
-  },
-  {
-    id: "pi_demo_0046",
-    campaign: "Flood response demonstration",
-    type: "Donation",
-    amount: "₱750",
-    status: "Failed",
-    time: "Aug 27, 9:44 AM",
-  },
-];
+export type AdminData = {
+  campaigns: Array<Record<string, unknown>>;
+  donations: Array<Record<string, unknown>>;
+  disbursements: Array<Record<string, unknown>>;
+  submissions: Array<Record<string, unknown>>;
+  proofs: Array<Record<string, unknown>>;
+  sources: Array<Record<string, unknown>>;
+  sourceChecks: Array<Record<string, unknown>>;
+  ledgerJobs: Array<Record<string, unknown>>;
+  auditEntries: Array<Record<string, unknown>>;
+  analytics: Array<Record<string, unknown>>;
+  adminAudit: Array<Record<string, unknown>>;
+  webhookEvents: Array<Record<string, unknown>>;
+  connected: boolean;
+};
 
-export const reviewQueue = [
-  {
-    organization: "Community Relief Network",
-    program: "Monsoon family kits",
-    proof: "Website + pubmat + authorization",
-    status: "Submitted",
-    age: "18 min",
-  },
-  {
-    organization: "Bayanihan Youth Alliance",
-    program: "Flood cleanup fund",
-    proof: "Facebook post + SEC document",
-    status: "Needs information",
-    age: "3 hr",
-  },
-  {
-    organization: "Island Health Response",
-    program: "Emergency medicine delivery",
-    proof: "Website + budget + payout proof",
-    status: "Submitted",
-    age: "5 hr",
-  },
-  {
-    organization: "Northern Luzon Food Bank",
-    program: "Rice and water distribution",
-    proof: "Video + official website",
-    status: "Submitted",
-    age: "1 day",
-  },
-];
+export async function loadAdminData(): Promise<AdminData> {
+  const supabase = await createServerUserClient();
+  const results = await Promise.all([
+    supabase
+      .from("campaigns")
+      .select(
+        "id,title,slug,status,received_centavos,disbursed_centavos,funding_goal_centavos,created_at",
+      )
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("donations")
+      .select(
+        "id,campaign_id,paymongo_payment_id,paymongo_payment_intent_id,amount_centavos,status,paid_at,created_at,campaigns(title)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("disbursements")
+      .select(
+        "id,campaign_id,purpose,amount_centavos,status,occurred_at,campaigns(title)",
+      )
+      .order("occurred_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("program_submissions")
+      .select(
+        "id,organization_name,program_name,status,official_domain,created_at,submitted_at,reviewed_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("program_proofs")
+      .select(
+        "id,submission_id,kind,label,public_url,private_object_path,sha256,is_identity_proof,created_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("external_campaign_sources")
+      .select(
+        "id,slug,organization_name,title,source_domain,source_health,is_visible,last_checked_at,official_source_url,donation_url",
+      )
+      .order("organization_name"),
+    supabase
+      .from("source_check_logs")
+      .select("id,source_id,status_code,donation_cta_found,detail,checked_at")
+      .order("checked_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("ledger_jobs")
+      .select(
+        "id,entity_type,entity_id,campaign_id,amount_centavos,payload_hash,status,attempts,tx_hash,last_error,created_at,updated_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("audit_entries")
+      .select(
+        "id,campaign_id,entity_type,entity_id,title,amount_centavos,status,ledger_tx_hash,evidence_sha256,occurred_at",
+      )
+      .order("occurred_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("analytics_events")
+      .select(
+        "id,event_kind,campaign_id,external_source_id,path,amount_centavos,occurred_at",
+      )
+      .order("occurred_at", { ascending: false })
+      .limit(500),
+    supabase
+      .from("admin_audit_log")
+      .select("id,action,entity_type,entity_id,created_at")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("webhook_events")
+      .select("id,event_type,status,processing_error,received_at,processed_at")
+      .order("received_at", { ascending: false })
+      .limit(100),
+  ]);
 
-export const funnelSteps = [
-  { label: "Campaign views", value: 8240, percent: 100 },
-  { label: "Donation or redirect opened", value: 2736, percent: 33 },
-  { label: "TrackAid payment started", value: 914, percent: 11 },
-  { label: "TrackAid payment confirmed", value: 781, percent: 9 },
-];
+  const firstError = results.find((result) => result.error)?.error;
+  if (firstError) console.error("Admin data query failed", firstError.message);
+  const rows = (index: number) =>
+    (results[index].data ?? []) as Array<Record<string, unknown>>;
+  return {
+    campaigns: rows(0),
+    donations: rows(1),
+    disbursements: rows(2),
+    submissions: rows(3),
+    proofs: rows(4),
+    sources: rows(5),
+    sourceChecks: rows(6),
+    ledgerJobs: rows(7),
+    auditEntries: rows(8),
+    analytics: rows(9),
+    adminAudit: rows(10),
+    webhookEvents: rows(11),
+    connected: !firstError,
+  };
+}
 
-export const trafficByDay = [
-  42, 55, 49, 68, 61, 82, 76, 91, 87, 104, 96, 118, 126, 112,
-];
-
-export const healthItems = [
-  { label: "Official campaign sources", value: "4 healthy", tone: "good" },
-  { label: "PayMongo webhook delivery", value: "99.8%", tone: "good" },
-  { label: "Pending ledger jobs", value: "3 test jobs", tone: "watch" },
-  { label: "Sources approaching 24-hour limit", value: "0", tone: "good" },
-];
-
-export const auditLogRows = [
-  {
-    action: "Program marked needs information",
-    actor: "Owner",
-    entity: "Flood cleanup fund",
-    time: "Aug 27, 12:10 PM",
-  },
-  {
-    action: "Official source check succeeded",
-    actor: "System",
-    entity: "UNICEF Philippines",
-    time: "Aug 27, 11:20 AM",
-  },
-  {
-    action: "Evidence hash anchored",
-    actor: "Ledger worker",
-    entity: "0x4c6687…af9934",
-    time: "Aug 27, 10:22 AM",
-  },
-  {
-    action: "Disbursement confirmed",
-    actor: "Owner",
-    entity: "ds_demo_0008",
-    time: "Aug 27, 10:16 AM",
-  },
-];
+export function sumCentavos(
+  rows: Array<Record<string, unknown>>,
+  field: string,
+) {
+  return rows.reduce((sum, row) => sum + Number(row[field] ?? 0), 0);
+}

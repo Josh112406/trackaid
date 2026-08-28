@@ -6,11 +6,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { notFound } from "next/navigation";
-
-import { findDemoEvidenceRecord } from "@/lib/demo-data";
+import { loadEvidenceRecord } from "@/lib/campaigns";
 
 const SHA256_PATTERN = /^0x[0-9a-f]{64}$/i;
-
 export default async function EvidenceRecordPage({
   params,
 }: {
@@ -18,57 +16,52 @@ export default async function EvidenceRecordPage({
 }) {
   const { hash } = await params;
   if (!SHA256_PATTERN.test(hash)) notFound();
-  const record = findDemoEvidenceRecord(hash);
-  const anchoringTransaction = record?.event.ledgerTxHash;
-  const explorerUrl = anchoringTransaction
-    ? `https://amoy.polygonscan.com/tx/${anchoringTransaction}`
+  const record = await loadEvidenceRecord(hash);
+  if (!record) notFound();
+  const tx = record.ledger_tx_hash;
+  const explorer = tx
+    ? `https://amoy.polygonscan.com/tx/${tx}`
     : `https://amoy.polygonscan.com/search?f=0&q=${encodeURIComponent(hash)}`;
-
+  const campaign = record.campaigns as unknown as {
+    slug: string;
+    title: string;
+  } | null;
   return (
     <main id="main-content" className="simple-page evidence-record-page">
-      <Link className="back-link" href="/#audit">
-        <ArrowLeft size={17} aria-hidden="true" /> Back to public audit
+      <Link className="back-link" href="/public-audit">
+        <ArrowLeft size={17} /> Back to public audit
       </Link>
       <section className="evidence-record">
-        <div className="evidence-record-icon" aria-hidden="true">
+        <div className="evidence-record-icon">
           <Fingerprint size={34} />
         </div>
-        <span className="demo-label">Demonstration integrity record</span>
+        <span className="demo-label">Integrity record</span>
         <h1>Evidence hash</h1>
-        <p>
-          This fingerprint lets an auditor compare a private evidence file with
-          the public record without publishing the receipt, permit, or personal
-          information itself.
-        </p>
+        <p>{record.public_detail}</p>
         <a
           className="evidence-hash-explorer"
-          href={explorerUrl}
+          href={explorer}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={
-            anchoringTransaction
-              ? "Open the anchoring transaction on Polygon Amoy"
-              : "Search this evidence hash on the Polygon Amoy explorer"
-          }
         >
           <code>{hash}</code>
-          <ArrowUpRight size={19} aria-hidden="true" />
+          <ArrowUpRight size={19} />
         </a>
         <div className="evidence-record-note">
-          <ShieldCheck size={20} aria-hidden="true" />
+          <ShieldCheck size={20} />
           <p>
-            {anchoringTransaction
-              ? "Open PolygonScan to inspect the demonstration anchoring transaction identifier."
-              : "No anchoring transaction is recorded for this submitted demonstration item yet. The link searches Polygon Amoy and may return no result until a real transaction exists."}
+            {tx
+              ? "Open PolygonScan to inspect the transaction that anchored this fingerprint."
+              : "This fingerprint is recorded, but an on-chain transaction has not been confirmed yet."}
           </p>
         </div>
-        {record ? (
+        {campaign ? (
           <Link
             className="text-link evidence-campaign-link"
-            href={`/campaigns/${record.campaign.slug}`}
+            href={`/campaigns/${campaign.slug}`}
           >
-            View the related campaign audit trail
-            <ArrowUpRight size={16} aria-hidden="true" />
+            View {campaign.title}
+            <ArrowUpRight size={16} />
           </Link>
         ) : null}
       </section>

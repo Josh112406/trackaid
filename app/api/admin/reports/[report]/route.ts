@@ -1,53 +1,7 @@
 import { NextResponse } from "next/server";
-
-import {
-  auditLogRows,
-  funnelSteps,
-  reviewQueue,
-  transactionRows,
-} from "@/lib/admin-data";
 import { getAdminAccess } from "@/lib/admin-auth";
+import { loadAdminData } from "@/lib/admin-data";
 import { toCsv } from "@/lib/csv";
-import { officialCampaignSources } from "@/lib/official-sources";
-
-const reports = {
-  transactions: transactionRows.map((row) => ({
-    reference: row.id,
-    campaign: row.campaign,
-    transaction_type: row.type,
-    amount_php: row.amount,
-    status: row.status,
-    recorded_at: row.time,
-    stream: "TrackAid processed",
-  })),
-  campaigns: [
-    ...reviewQueue.map((row) => ({
-      organization: row.organization,
-      program: row.program,
-      source_type: "Manual submission",
-      status: row.status,
-      proof: row.proof,
-    })),
-    ...officialCampaignSources.map((source) => ({
-      organization: source.organizationName,
-      program: source.title,
-      source_type: "Official external source",
-      status: source.sourceHealth,
-      proof: source.officialSourceUrl,
-    })),
-  ],
-  analytics: funnelSteps.map((step) => ({
-    metric: step.label,
-    count: step.value,
-    percent_of_campaign_views: step.percent,
-  })),
-  "audit-log": auditLogRows.map((row) => ({
-    action: row.action,
-    actor: row.actor,
-    entity: row.entity,
-    recorded_at: row.time,
-  })),
-} satisfies Record<string, Array<Record<string, string | number>>>;
 
 export async function GET(
   _: Request,
@@ -59,14 +13,53 @@ export async function GET(
       { message: "Administrator sign-in required." },
       { status: 401 },
     );
-
   const { report } = await params;
+  const data = await loadAdminData();
+  const reports: Record<string, Array<Record<string, string | number>>> = {
+    transactions: [
+      ...data.donations.map((r) => ({
+        reference: String(r.paymongo_payment_id ?? r.id),
+        type: "donation",
+        amount_centavos: Number(r.amount_centavos ?? 0),
+        status: String(r.status),
+        recorded_at: String(r.paid_at ?? r.created_at),
+      })),
+      ...data.disbursements.map((r) => ({
+        reference: String(r.id),
+        type: "disbursement",
+        amount_centavos: Number(r.amount_centavos ?? 0),
+        status: String(r.status),
+        recorded_at: String(r.occurred_at),
+      })),
+    ],
+    programs: data.submissions.map((r) => ({
+      organization: String(r.organization_name),
+      program: String(r.program_name),
+      domain: String(r.official_domain),
+      status: String(r.status),
+      created_at: String(r.created_at),
+    })),
+    analytics: data.analytics.map((r) => ({
+      event: String(r.event_kind),
+      path: String(r.path),
+      amount_centavos:
+        r.amount_centavos === null ? "" : Number(r.amount_centavos ?? 0),
+      occurred_at: String(r.occurred_at),
+    })),
+    "audit-log": data.adminAudit.map((r) => ({
+      action: String(r.action),
+      entity_type: String(r.entity_type),
+      entity_id: String(r.entity_id ?? ""),
+      recorded_at: String(r.created_at),
+    })),
+  };
   if (!(report in reports))
     return NextResponse.json({ message: "Report not found." }, { status: 404 });
-  const csv = toCsv(reports[report as keyof typeof reports]);
+  const csv = toCsv(reports[report]);
+  const date = new Date().toISOString().slice(0, 10);
   return new NextResponse(csv, {
     headers: {
-      "content-disposition": `attachment; filename="trackaid-${report}-2026-08-27.csv"`,
+      "content-disposition": `attachment; filename="trackaid-${report}-${date}.csv"`,
       "content-type": "text/csv; charset=utf-8",
       "cache-control": "no-store",
     },

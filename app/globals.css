@@ -966,8 +966,8 @@ h3 {
   border-radius: var(--radius-lg);
   background: var(--sage);
   align-items: center;
-  gap: 48px;
-  grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+  gap: clamp(36px, 5vw, 76px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
 }
 
 .campaign-hero > * {
@@ -976,7 +976,8 @@ h3 {
 
 .campaign-hero h1 {
   margin: 22px 0;
-  font-size: clamp(3rem, 6vw, 6rem);
+  max-width: 10ch;
+  font-size: clamp(3rem, 5.2vw, 5.6rem);
 }
 
 .campaign-summary {
@@ -1005,7 +1006,7 @@ h3 {
 
 .campaign-totals {
   width: 100%;
-  padding: 32px;
+  padding: clamp(28px, 3.2vw, 42px);
   border-radius: var(--radius-md);
   background: var(--sand);
   align-self: center;
@@ -1023,7 +1024,7 @@ h3 {
   display: block;
   margin: 10px 0 8px;
   font-family: var(--font-display), Fraunces, serif;
-  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  font-size: clamp(2.35rem, 4vw, 4rem);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -1034,7 +1035,7 @@ h3 {
 
 .campaign-totals dl div {
   display: flex;
-  padding: 10px 0;
+  padding: 14px 0;
   border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   justify-content: space-between;
   gap: 20px;
@@ -1042,7 +1043,7 @@ h3 {
 
 .campaign-totals dt,
 .campaign-totals dd {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
 }
 
 .campaign-totals dd {
@@ -2604,5 +2605,186 @@ body:has(.admin-shell) > .site-footer {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.content-page {
+  padding-top: clamp(64px, 9vw, 120px);
+}
+
+.content-page > h1 {
+  max-width: 920px;
+}
+
+.page-lede {
+  max-width: 780px;
+  margin-bottom: 64px;
+  color: var(--ink-muted);
+  font-size: 1.12rem;
+}
+
+.feature-grid,
+.proof-grid {
+  display: grid;
+  margin: 54px 0;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.feature-grid article {
+  min-height: 230px;
+  padding: 28px;
+  border-radius: var(--radius-md);
+  background: var(--sage);
+}
+
+.feature-grid article:nth-child(2) {
+  background: var(--oat);
+}
+.feature-grid article:nth-child(3) {
+  background: var(--leaf-pale);
+}
+.feature-grid h2 {
+  margin: 46px 0 12px;
+  font-size: 1.5rem;
+}
+
+.empty-state {
+  display: grid;
+  min-height: 270px;
+  padding: clamp(28px, 5vw, 54px);
+  border: 1px dashed color-mix(in srgb, var(--ink) 32%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--sand) 72%, var(--sage));
+  align-content: center;
+  justify-items: start;
+}
+
+.empty-state h3 {
+  margin: 18px 0 8px;
+}
+.empty-state p {
+  max-width: 620px;
+  color: var(--ink-muted);
+}
+.compact-empty {
+  min-height: 180px;
+  margin-top: 28px;
+  padding: 28px;
+}
+
+.checkout-banner,
+.admin-production-note {
+  display: flex;
+  margin: 0 0 24px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--oat);
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.checkout-banner p,
+.admin-production-note p {
+  margin: 0;
+}
+.checkout-success {
+  background: var(--leaf-pale);
+}
+
+.money-input {
+  display: grid;
+  overflow: hidden;
+  margin: 8px 0 18px;
+  border: 1px solid color-mix(in srgb, var(--ink) 34%, transparent);
+  border-radius: var(--radius-sm);
+  grid-template-columns: auto 1fr;
+}
+
+.money-input > span {
+  display: grid;
+  padding: 0 14px;
+  background: var(--sage);
+  place-items: center;
+  font-weight: 800;
+}
+.money-input input {
+  min-width: 0;
+  min-height: 54px;
+  padding: 12px;
+  border: 0;
+  background: var(--sand);
+  color: var(--ink);
+  font: inherit;
+}
+.checkout-security {
+  display: flex;
+  margin-top: 14px;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.admin-sidebar nav a.is-active {
+  background: rgb(241 231 214 / 13%);
+  color: #fff8e8;
+}
+
+.admin-topbar > div:first-child > p {
+  max-width: 660px;
+  color: #65705f;
+}
+.admin-production-note {
+  margin: 0 0 38px;
+  background: #dce5d4;
+}
+.proof-grid {
+  margin: 0;
+}
+.proof-grid .admin-panel h3 {
+  margin: 20px 0 8px;
+}
+.proof-grid .admin-panel a {
+  display: inline-flex;
+  margin-top: 18px;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+}
+.review-actions {
+  display: flex;
+  max-width: 540px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.review-actions .form-message {
+  flex-basis: 100%;
+}
+.text-button {
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.danger-button {
+  color: #8a352b;
+}
+
+@media (max-width: 900px) {
+  .feature-grid,
+  .proof-grid {
+    grid-template-columns: 1fr;
+  }
+  .campaign-hero {
+    padding: 34px;
+    grid-template-columns: 1fr;
+  }
+  .campaign-hero h1 {
+    max-width: none;
   }
 }

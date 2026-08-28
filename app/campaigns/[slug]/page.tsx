@@ -7,56 +7,72 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { notFound } from "next/navigation";
-
 import { AuditTimeline } from "@/components/audit-timeline";
-import { DonationReadiness } from "@/components/donation-readiness";
-import { demoCampaigns } from "@/lib/demo-data";
+import { DonationCheckout } from "@/components/donation-checkout";
+import { loadCampaignBySlug } from "@/lib/campaigns";
 import { formatPhp, percentOf } from "@/lib/format";
 
 export default async function CampaignPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ checkout?: string }>;
 }) {
-  const { slug } = await params;
-  const campaign = demoCampaigns.find((item) => item.slug === slug);
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const campaign = await loadCampaignBySlug(slug);
   if (!campaign) notFound();
-
   const progress = percentOf(
     campaign.receivedCentavos,
     campaign.fundingGoalCentavos,
   );
-
   return (
     <main id="main-content" className="campaign-page">
       <Link className="back-link" href="/campaigns">
-        <ArrowLeft size={17} aria-hidden="true" /> Back to campaigns
+        <ArrowLeft size={17} /> Back to campaigns
       </Link>
+      {query.checkout === "success" ? (
+        <div className="checkout-banner checkout-success">
+          <ShieldCheck size={19} />
+          <p>
+            PayMongo accepted the checkout. The donation appears after TrackAid
+            verifies the signed payment webhook.
+          </p>
+        </div>
+      ) : null}
+      {query.checkout === "cancelled" ? (
+        <div className="checkout-banner">
+          <CircleAlert size={19} />
+          <p>
+            Checkout was closed. No payment is recorded unless PayMongo confirms
+            it.
+          </p>
+        </div>
+      ) : null}
       <section className="campaign-hero">
         <div>
-          <span className="demo-label">
-            Demonstration campaign · no live donations
-          </span>
+          <span className="demo-label">Verified relief campaign</span>
           <h1>{campaign.title}</h1>
           <p className="campaign-summary">{campaign.summary}</p>
           <div className="campaign-facts">
             <span>
-              <MapPin size={18} aria-hidden="true" /> {campaign.location}
+              <MapPin size={18} />
+              {campaign.location}
             </span>
             <span>
-              <ShieldCheck size={18} aria-hidden="true" />{" "}
+              <ShieldCheck size={18} />
               {campaign.organization}
             </span>
             <span>
-              <Landmark size={18} aria-hidden="true" /> Registered account check
-              demonstrated
+              <Landmark size={18} />
+              Registered payout account reviewed
             </span>
           </div>
         </div>
         <div className="campaign-totals">
-          <span>Test donations recorded</span>
+          <span>Donations recorded</span>
           <strong>{formatPhp(campaign.receivedCentavos)}</strong>
-          <p>of {formatPhp(campaign.fundingGoalCentavos)} demonstration goal</p>
+          <p>of {formatPhp(campaign.fundingGoalCentavos)} goal</p>
           <div
             className="progress-track"
             role="progressbar"
@@ -69,11 +85,11 @@ export default async function CampaignPage({
           </div>
           <dl>
             <div>
-              <dt>Logged disbursements</dt>
+              <dt>Confirmed disbursements</dt>
               <dd>{formatPhp(campaign.disbursedCentavos)}</dd>
             </div>
             <div>
-              <dt>Unallocated demonstration balance</dt>
+              <dt>Available balance</dt>
               <dd>
                 {formatPhp(
                   campaign.receivedCentavos - campaign.disbursedCentavos,
@@ -83,38 +99,43 @@ export default async function CampaignPage({
           </dl>
         </div>
       </section>
-
       <div className="campaign-content-grid">
-        <section
-          className="campaign-audit"
-          aria-labelledby="campaign-audit-title"
-        >
+        <section className="campaign-audit">
           <div className="section-heading compact-heading">
             <div>
               <span className="eyebrow">Public record</span>
-              <h2 id="campaign-audit-title">Audit trail</h2>
+              <h2>Audit trail</h2>
             </div>
           </div>
           <div className="evidence-notice">
-            <CircleAlert size={20} aria-hidden="true" />
+            <CircleAlert size={20} />
             <p>
-              A confirmed ledger entry proves the record has not changed since
-              anchoring. Independent beneficiary and supplier confirmations
-              provide evidence about the real-world event.
+              On-chain anchoring proves a published record has not changed.
+              Source documents and independent confirmations support the
+              underlying real-world event.
             </p>
           </div>
-          <AuditTimeline events={campaign.events} />
+          {campaign.events.length ? (
+            <AuditTimeline events={campaign.events} />
+          ) : (
+            <div className="empty-state compact-empty">
+              <h3>No transactions recorded yet.</h3>
+              <p>
+                Verified PayMongo payments and reviewed disbursements will
+                appear here.
+              </p>
+            </div>
+          )}
         </section>
         <aside>
-          <DonationReadiness campaignId={campaign.id} />
+          <DonationCheckout campaignId={campaign.id} />
           <div className="aside-card">
             <h2>Target beneficiaries</h2>
             <p>{campaign.targetBeneficiaries}</p>
             <h3>Evidence privacy</h3>
             <p>
-              Receipts and permit files remain in private storage. The public
-              record contains redacted descriptions and cryptographic hashes for
-              integrity checks.
+              Receipts and permits stay in private storage. Public entries
+              expose only redacted context and cryptographic fingerprints.
             </p>
           </div>
         </aside>

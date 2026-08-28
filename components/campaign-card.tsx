@@ -13,9 +13,9 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
     <article className="campaign-card">
       <div className="campaign-card-topline">
-        <span className="demo-label">Demonstration campaign</span>
+        <span className="demo-label">TrackAid campaign</span>
         <span className="verified-label">
-          <ShieldCheck size={16} aria-hidden="true" /> Verified demo profile
+          <ShieldCheck size={16} aria-hidden="true" /> Verified organization
         </span>
       </div>
       <h3>{campaign.title}</h3>

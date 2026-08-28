@@ -11,7 +11,7 @@ export default async function NewProgramSubmissionPage() {
 
   return (
     <main id="main-content" className="admin-form-page">
-      <Link className="back-link" href="/admin#programs">
+      <Link className="back-link" href="/admin/programs">
         <ArrowLeft size={17} aria-hidden="true" /> Back to review queue
       </Link>
       <div className="admin-form-intro">
@@ -26,10 +26,10 @@ export default async function NewProgramSubmissionPage() {
         <div className="admin-preview-banner">
           <CirclePreview />
           <div>
-            <strong>Preview mode</strong>
+            <strong>Database access required</strong>
             <p>
-              The form demonstrates the workflow but will not save until
-              protected Supabase administration is enabled.
+              Sign in with an authorized Supabase account to save programs and
+              evidence.
             </p>
           </div>
         </div>

@@ -4,206 +4,125 @@ import {
   BadgeCheck,
   BanknoteArrowDown,
   FileLock2,
-  HandCoins,
-  MessageSquareCheck,
   ScanSearch,
 } from "lucide-react";
-
-import { AuditTimeline } from "@/components/audit-timeline";
 import { CampaignCard } from "@/components/campaign-card";
 import { OfficialCampaignCard } from "@/components/official-campaign-card";
-import { demoCampaigns } from "@/lib/demo-data";
-import { formatPhp } from "@/lib/format";
+import { loadPublishedCampaigns } from "@/lib/campaigns";
 import { loadOfficialCampaignSources } from "@/lib/official-sources";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const campaign = demoCampaigns[0];
-  const officialCampaignSources = await loadOfficialCampaignSources();
-
+  const [campaigns, sources] = await Promise.all([
+    loadPublishedCampaigns(),
+    loadOfficialCampaignSources(),
+  ]);
   return (
     <main id="main-content">
       <section className="hero">
         <div className="hero-copy">
-          <span className="demo-label">Working MVP · demonstration data</span>
+          <span className="demo-label">Public relief ledger</span>
           <h1>Disaster relief people can follow, peso by peso.</h1>
           <p className="hero-lede">
-            TrackAid connects familiar Philippine payment rails to a public,
-            tamper-evident record of donations, disbursements, evidence, and
-            independent confirmations.
+            TrackAid connects Philippine payment rails to a public record of
+            donations, disbursements, evidence, and independent confirmations.
           </p>
           <div className="hero-actions">
             <Link className="primary-button" href="/campaigns">
-              View campaigns <ArrowRight size={18} aria-hidden="true" />
+              View campaigns <ArrowRight size={18} />
             </Link>
-            <Link className="secondary-button" href="#how-it-works">
-              See how verification works
+            <Link className="secondary-button" href="/how-it-works">
+              How verification works
             </Link>
           </div>
           <p className="safety-note">
-            This prototype does not accept live donations and does not represent
-            any real campaign.
+            Only verified, published campaigns can accept on-platform donations.
+            External appeals always open on the organization’s official site.
           </p>
         </div>
-        <div className="hero-ledger" aria-label="Example fund flow">
+        <div className="hero-ledger" aria-label="TrackAid audit flow">
           <div className="ledger-card ledger-card-main">
-            <span>Demonstration campaign</span>
-            <strong>{formatPhp(campaign.receivedCentavos)}</strong>
-            <p>test donations recorded</p>
+            <span>Payment</span>
+            <strong>PHP</strong>
+            <p>Processed through PayMongo</p>
           </div>
-          <div className="ledger-stem" aria-hidden="true" />
+          <div className="ledger-stem" />
           <div className="ledger-split">
             <div className="ledger-card">
-              <span>Logged disbursements</span>
-              <strong>{formatPhp(campaign.disbursedCentavos)}</strong>
+              <span>Evidence</span>
+              <strong>SHA-256</strong>
             </div>
             <div className="ledger-card">
-              <span>Public confirmations</span>
-              <strong>2 types</strong>
+              <span>Public record</span>
+              <strong>Auditable</strong>
             </div>
           </div>
           <div className="ledger-seal">
-            <BadgeCheck size={20} aria-hidden="true" /> Anchored on a test
-            network
+            <BadgeCheck size={20} /> Sensitive files remain private
           </div>
         </div>
       </section>
-
-      <section className="trust-strip" aria-label="TrackAid principles">
+      <section className="trust-strip">
         <div>
-          <BanknoteArrowDown size={22} aria-hidden="true" />
+          <BanknoteArrowDown size={22} />
           <span>Money stays in Philippine pesos</span>
         </div>
         <div>
-          <FileLock2 size={22} aria-hidden="true" />
+          <FileLock2 size={22} />
           <span>Sensitive evidence stays private</span>
         </div>
         <div>
-          <ScanSearch size={22} aria-hidden="true" />
+          <ScanSearch size={22} />
           <span>Hashes and totals stay publicly auditable</span>
         </div>
       </section>
-
-      <section className="section-shell" id="campaigns">
+      <section className="section-shell">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">Campaign demonstrations</span>
-            <h2>Follow the full record, not just the fundraising total.</h2>
+            <span className="eyebrow">TrackAid campaigns</span>
+            <h2>Follow the full record, not just a fundraising total.</h2>
           </div>
-          <p>
-            These records are intentionally labeled demonstrations. They show
-            the proposed experience without presenting sample activity as real
-            relief work.
-          </p>
+          <p>Campaigns appear here only after organization and proof review.</p>
         </div>
-        <div className="campaign-grid">
-          {demoCampaigns.map((item) => (
-            <CampaignCard campaign={item} key={item.id} />
-          ))}
-        </div>
+        {campaigns.length ? (
+          <div className="campaign-grid">
+            {campaigns.slice(0, 2).map((c) => (
+              <CampaignCard key={c.id} campaign={c} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <BadgeCheck size={28} />
+            <h3>No on-platform campaign is published yet.</h3>
+            <p>
+              The directory will open when the first organization completes
+              verification.
+            </p>
+            <Link className="text-link" href="/organizations">
+              Read the approval requirements <ArrowRight size={16} />
+            </Link>
+          </div>
+        )}
       </section>
-
-      <section className="official-campaigns-section" id="official-campaigns">
+      <section className="official-campaigns-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">Live official sources</span>
+            <span className="eyebrow">Official sources</span>
             <h2>Fundraisers checked at their source.</h2>
           </div>
           <p>
-            These listings come from organization-owned pages found and checked
-            with Firecrawl. Donation buttons open the organization’s own
-            website; TrackAid never presents those external payments as TrackAid
-            transactions.
+            These links open organization-owned donation pages. Their payments
+            are not recorded as TrackAid transactions.
           </p>
         </div>
         <div className="official-campaign-grid">
-          {officialCampaignSources.map((source) => (
-            <OfficialCampaignCard key={source.slug} source={source} />
+          {sources.slice(0, 3).map((s) => (
+            <OfficialCampaignCard key={s.slug} source={s} />
           ))}
         </div>
-      </section>
-
-      <section className="how-section" id="how-it-works">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">How TrackAid works</span>
-            <h2>Trust is built in layers.</h2>
-          </div>
-          <p>
-            A blockchain record proves that a digital statement has not been
-            changed. It does not prove that a receipt is truthful or that goods
-            reached a person, so TrackAid adds verification at each real-world
-            boundary.
-          </p>
-        </div>
-        <ol className="how-grid">
-          <li>
-            <span>01</span>
-            <BadgeCheck size={28} aria-hidden="true" />
-            <h3>Verify organizations</h3>
-            <p>
-              Review official domains, permits, and registered organization bank
-              details.
-            </p>
-          </li>
-          <li>
-            <span>02</span>
-            <HandCoins size={28} aria-hidden="true" />
-            <h3>Reconcile payments</h3>
-            <p>
-              Accept pesos through PayMongo and record only verified, idempotent
-              webhook events.
-            </p>
-          </li>
-          <li>
-            <span>03</span>
-            <FileLock2 size={28} aria-hidden="true" />
-            <h3>Hash evidence</h3>
-            <p>
-              Keep personal data private while publishing the evidence hash and
-              redacted description.
-            </p>
-          </li>
-          <li>
-            <span>04</span>
-            <MessageSquareCheck size={28} aria-hidden="true" />
-            <h3>Collect confirmations</h3>
-            <p>
-              Invite beneficiaries and suppliers to confirm or dispute a logged
-              disbursement.
-            </p>
-          </li>
-        </ol>
-      </section>
-
-      <section className="audit-preview section-shell" id="audit">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">Public audit preview</span>
-            <h2>The receipt thread.</h2>
-          </div>
-          <p>
-            Every entry shows what happened, who still needs to confirm it, and
-            which proof can be independently checked.
-          </p>
-        </div>
-        <AuditTimeline events={campaign.events} />
-      </section>
-
-      <section className="closing-cta">
-        <div>
-          <span className="eyebrow">For relief organizations and LGUs</span>
-          <h2>Start with verification, not a wallet.</h2>
-          <p>
-            Organizations use familiar sign-in and payment tools. Blockchain
-            recording runs behind the service and never asks donors to hold
-            cryptocurrency.
-          </p>
-        </div>
-        <Link className="primary-button" href="/verify">
-          Review the verification flow{" "}
-          <ArrowRight size={18} aria-hidden="true" />
+        <Link className="directory-home-link" href="/official-sources">
+          View all official sources <ArrowRight size={17} />
         </Link>
       </section>
     </main>

@@ -7,7 +7,7 @@ export default function CampaignNotFound() {
       <h1>This public record is not available.</h1>
       <p>The link may be incomplete or the campaign may not be published.</p>
       <Link className="primary-button" href="/campaigns">
-        View demonstration campaigns
+        View campaigns
       </Link>
     </main>
   );

@@ -29,6 +29,5 @@ export type Campaign = {
   receivedCentavos: number;
   disbursedCentavos: number;
   status: "published" | "closed";
-  isDemonstration: boolean;
   events: AuditEvent[];
 };

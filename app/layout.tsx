@@ -20,7 +20,7 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "TrackAid | Public disaster-relief audit trail",
   description:
-    "A demonstration of transparent disaster-relief donations, disbursements, and confirmations.",
+    "Transparent disaster-relief donations, disbursements, evidence, and confirmations.",
 };
 
 export default function RootLayout({
@@ -41,21 +41,24 @@ export default function RootLayout({
           </Link>
           <nav aria-label="Primary navigation">
             <Link href="/campaigns">Campaigns</Link>
-            <Link href="/campaigns#official">Official sources</Link>
-            <Link href="/#audit">Public audit</Link>
-            <Link href="/verify">Verify an organization</Link>
+            <Link href="/official-sources">Official sources</Link>
+            <Link href="/public-audit">Public audit</Link>
+            <Link href="/how-it-works">How it works</Link>
+            <Link href="/organizations">Organizations</Link>
             <Link href="/admin">Admin</Link>
           </nav>
         </header>
         {children}
         <footer className="site-footer">
           <div>
-            <strong>TrackAid prototype</strong>
-            <p>No live donations are accepted in this demonstration.</p>
+            <strong>TrackAid</strong>
+            <p>Relief funding with a public, tamper-evident audit trail.</p>
           </div>
           <div className="footer-links">
             <Link href="/campaigns">Campaigns</Link>
-            <Link href="/#how-it-works">How it works</Link>
+            <Link href="/how-it-works">How it works</Link>
+            <Link href="/public-audit">Public audit</Link>
+            <Link href="/blockchain">Blockchain</Link>
             <Link href="/verify">Organization verification</Link>
             <Link href="/admin">Admin dashboard</Link>
           </div>
