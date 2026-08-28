@@ -1,0 +1,2 @@
+create index organization_verification_reviewed_by_idx
+on public.organization_verification_submissions (reviewed_by, reviewed_at desc);

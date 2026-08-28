@@ -1,0 +1,15 @@
+.next/
+node_modules/
+.env*
+!.env.example
+.vercel/
+.firecrawl/
+.agents/
+coverage/
+dist/
+artifacts/
+cache/
+work/
+outputs/
+*.tsbuildinfo
+supabase/.temp/
