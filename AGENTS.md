@@ -11,5 +11,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Version control
 
 - Commit every completed project change before handing work back to the user.
-- Use a concise commit message that describes the completed change.
+- Use Conventional Commit messages (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, or `refactor:`) with a concise description of the completed change.
 - Never commit secrets, local environment files, generated build output, or dependency directories.
