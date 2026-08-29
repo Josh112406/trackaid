@@ -49,9 +49,23 @@ export default async function CampaignPage({
           </p>
         </div>
       ) : null}
+      {campaign.isDemonstration ? (
+        <div className="checkout-banner">
+          <CircleAlert size={19} />
+          <p>
+            This unlisted payment sandbox accepts PayMongo test-mode
+            transactions only. It is not a real relief fundraiser and must not
+            receive live payments.
+          </p>
+        </div>
+      ) : null}
       <section className="campaign-hero">
         <div>
-          <span className="demo-label">Verified relief campaign</span>
+          <span className="demo-label">
+            {campaign.isDemonstration
+              ? "Unlisted payment sandbox"
+              : "Verified relief campaign"}
+          </span>
           <h1>{campaign.title}</h1>
           <p className="campaign-summary">{campaign.summary}</p>
           <div className="campaign-facts">
@@ -65,7 +79,9 @@ export default async function CampaignPage({
             </span>
             <span>
               <Landmark size={18} />
-              Registered payout account reviewed
+              {campaign.isDemonstration
+                ? "PayMongo test settlement only"
+                : "Registered payout account reviewed"}
             </span>
           </div>
         </div>

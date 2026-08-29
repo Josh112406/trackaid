@@ -31,5 +31,6 @@ export type Campaign = {
   netReceivedCentavos: number;
   disbursedCentavos: number;
   status: "published" | "closed";
+  isDemonstration: boolean;
   events: AuditEvent[];
 };
