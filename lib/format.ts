@@ -1,8 +1,10 @@
 export function formatPhp(centavos: number): string {
+  const hasCentavos = Math.abs(centavos) % 100 !== 0;
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: hasCentavos ? 2 : 0,
+    maximumFractionDigits: 2,
   }).format(centavos / 100);
 }
 
