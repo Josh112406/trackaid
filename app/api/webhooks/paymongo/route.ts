@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { after, NextResponse } from "next/server";
 
-import { verifyPayMongoSignature } from "@/lib/paymongo-signature";
+import { verifyPayMongoWebhookRequest } from "@/lib/paymongo-signature";
 import { processLedgerJobs } from "@/lib/ledger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -14,8 +14,9 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("paymongo-signature");
   const webhookSecret = process.env.PAYMONGO_WEBHOOK_SECRET;
+  const merchantSecretKey = process.env.PAYMONGO_SECRET_KEY;
 
-  if (!signature || !webhookSecret) {
+  if (!signature || (!webhookSecret && !merchantSecretKey)) {
     return NextResponse.json(
       { error: "Webhook verification is not configured." },
       { status: 503 },
@@ -23,14 +24,18 @@ export async function POST(request: Request) {
   }
 
   const mode = process.env.PAYMONGO_LIVE_MODE === "true" ? "live" : "test";
-  if (
-    !verifyPayMongoSignature({
-      rawBody,
-      header: signature,
-      webhookSecret,
-      mode,
-    })
-  ) {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+  const endpointUrl = new URL("/api/webhooks/paymongo", siteUrl).toString();
+  const verified = await verifyPayMongoWebhookRequest({
+    rawBody,
+    header: signature,
+    endpointUrl,
+    mode,
+    configuredSecret: webhookSecret,
+    merchantSecretKey,
+  });
+  if (!verified) {
     return NextResponse.json(
       { error: "Invalid webhook signature." },
       { status: 401 },
