@@ -11,6 +11,8 @@ type CampaignRow = {
   target_beneficiaries: string;
   funding_goal_centavos: number;
   received_centavos: number;
+  processing_fee_centavos: number;
+  net_received_centavos: number;
   disbursed_centavos: number;
   status: "published" | "closed";
   organizations: { name: string } | null;
@@ -39,6 +41,8 @@ function mapCampaign(row: CampaignRow): Campaign {
     targetBeneficiaries: row.target_beneficiaries,
     fundingGoalCentavos: Number(row.funding_goal_centavos),
     receivedCentavos: Number(row.received_centavos),
+    processingFeeCentavos: Number(row.processing_fee_centavos),
+    netReceivedCentavos: Number(row.net_received_centavos),
     disbursedCentavos: Number(row.disbursed_centavos),
     status: row.status,
     events: row.audit_entries.map((event) => ({
@@ -59,7 +63,7 @@ function mapCampaign(row: CampaignRow): Campaign {
   };
 }
 
-const campaignSelect = `id, slug, title, disaster_name, location, summary, target_beneficiaries, funding_goal_centavos, received_centavos, disbursed_centavos, status, organizations(name), audit_entries(id, entity_type, title, public_detail, amount_centavos, occurred_at, status, ledger_tx_hash, evidence_sha256)`;
+const campaignSelect = `id, slug, title, disaster_name, location, summary, target_beneficiaries, funding_goal_centavos, received_centavos, processing_fee_centavos, net_received_centavos, disbursed_centavos, status, organizations(name), audit_entries(id, entity_type, title, public_detail, amount_centavos, occurred_at, status, ledger_tx_hash, evidence_sha256)`;
 
 export async function loadPublishedCampaigns() {
   const { data, error } = await createPublicSupabaseClient()

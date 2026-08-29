@@ -9,7 +9,7 @@ function authorized(request: Request) {
   );
 }
 
-export async function POST(request: Request) {
+async function handleLedgerProcessing(request: Request) {
   if (!authorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -24,3 +24,6 @@ export async function POST(request: Request) {
 
   return NextResponse.json(result);
 }
+
+export const GET = handleLedgerProcessing;
+export const POST = handleLedgerProcessing;

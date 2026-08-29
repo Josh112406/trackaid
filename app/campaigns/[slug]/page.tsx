@@ -85,14 +85,22 @@ export default async function CampaignPage({
           </div>
           <dl>
             <div>
+              <dt>PayMongo processing fees</dt>
+              <dd>{formatPhp(campaign.processingFeeCentavos)}</dd>
+            </div>
+            <div>
+              <dt>Net received by recipient</dt>
+              <dd>{formatPhp(campaign.netReceivedCentavos)}</dd>
+            </div>
+            <div>
               <dt>Confirmed disbursements</dt>
               <dd>{formatPhp(campaign.disbursedCentavos)}</dd>
             </div>
             <div>
-              <dt>Available balance</dt>
+              <dt>Publicly unallocated balance</dt>
               <dd>
                 {formatPhp(
-                  campaign.receivedCentavos - campaign.disbursedCentavos,
+                  campaign.netReceivedCentavos - campaign.disbursedCentavos,
                 )}
               </dd>
             </div>

@@ -19,8 +19,8 @@ export default async function NewProgramSubmissionPage() {
         <h1>Add the claim. Then prove it.</h1>
         <p>
           Create a program from an official organization-owned page and attach
-          public campaign evidence. Owners and reviewers can publish it
-          immediately; auditor submissions still enter the review queue.
+          public campaign evidence. A different owner or reviewer must make the
+          final decision before publication.
         </p>
       </div>
       {access.mode === "preview" ? (
@@ -35,13 +35,7 @@ export default async function NewProgramSubmissionPage() {
           </div>
         </div>
       ) : null}
-      <ProgramSubmissionForm
-        mode="admin"
-        canPublish={
-          access.mode === "authenticated" &&
-          (access.role === "owner" || access.role === "reviewer")
-        }
-      />
+      <ProgramSubmissionForm mode="admin" />
     </main>
   );
 }

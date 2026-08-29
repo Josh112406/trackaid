@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import {
-  BadgeCheck,
   CheckCircle2,
   CircleAlert,
   FileCheck2,
@@ -34,13 +33,7 @@ async function sha256(value: string) {
   ).join("");
 }
 
-export function ProgramSubmissionForm({
-  mode,
-  canPublish = false,
-}: {
-  mode: "public" | "admin";
-  canPublish?: boolean;
-}) {
+export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
   const [state, setState] = useState<"idle" | "loading" | "ready" | "blocked">(
     "idle",
   );
@@ -52,12 +45,7 @@ export function ProgramSubmissionForm({
     const submitter = (event.nativeEvent as SubmitEvent)
       .submitter as HTMLButtonElement | null;
     const requestedIntent = submitter?.value;
-    const intent =
-      requestedIntent === "publish" && canPublish
-        ? "publish"
-        : requestedIntent === "review"
-          ? "review"
-          : "draft";
+    const intent = requestedIntent === "review" ? "review" : "draft";
     const form = new FormData(formElement);
     const supabase = createBrowserSupabaseClient();
 
@@ -139,22 +127,12 @@ export function ProgramSubmissionForm({
       return;
     }
 
-    if (intent === "review" || intent === "publish") {
+    if (intent === "review") {
       const now = new Date().toISOString();
-      const nextValues =
-        intent === "publish"
-          ? {
-              status: "approved" as const,
-              submitted_at: now,
-              reviewed_by: userData.user.id,
-              reviewed_at: now,
-              review_reason:
-                "Published directly by an authorized TrackAid administrator.",
-            }
-          : {
-              status: "submitted" as const,
-              submitted_at: now,
-            };
+      const nextValues = {
+        status: "submitted" as const,
+        submitted_at: now,
+      };
       const { data: reviewedSubmission, error: reviewError } = await supabase
         .from("program_submissions")
         .update(nextValues)
@@ -167,7 +145,7 @@ export function ProgramSubmissionForm({
       if (reviewError || !reviewedSubmission) {
         setState("blocked");
         setMessage(
-          `The draft and proof were saved, but ${intent === "publish" ? "publication" : "review submission"} failed: ${reviewError?.message ?? "no submission was updated"}`,
+          `The draft and proof were saved, but review submission failed: ${reviewError?.message ?? "no submission was updated"}`,
         );
         return;
       }
@@ -175,11 +153,9 @@ export function ProgramSubmissionForm({
 
     setState("ready");
     setMessage(
-      intent === "publish"
-        ? "Program published. Its proof and administrator approval were added to the audit trail."
-        : intent === "review"
-          ? "Program submitted for review with its proof attached."
-          : "Program and proof saved as a draft.",
+      intent === "review"
+        ? "Program submitted for review with its proof attached."
+        : "Program and proof saved as a draft.",
     );
     formElement.reset();
   }
@@ -287,7 +263,7 @@ export function ProgramSubmissionForm({
         <button
           className="primary-button"
           name="intent"
-          value={canPublish ? "publish" : "review"}
+          value="review"
           type="submit"
           disabled={state === "loading"}
         >
@@ -295,20 +271,12 @@ export function ProgramSubmissionForm({
             <LoaderCircle className="spin" size={18} aria-hidden="true" />
           ) : state === "ready" ? (
             <CheckCircle2 size={18} aria-hidden="true" />
-          ) : canPublish ? (
-            <BadgeCheck size={18} aria-hidden="true" />
           ) : (
             <Send size={18} aria-hidden="true" />
           )}
-          {canPublish ? "Publish program" : "Submit for review"}
+          Submit for independent review
         </button>
       </div>
-      {canPublish ? (
-        <p className="submission-action-note">
-          Publishing is immediate. TrackAid records your administrator account,
-          approval time, and evidence fingerprint in the audit trail.
-        </p>
-      ) : null}
       {message ? (
         <p className={`form-message form-message-${state}`} role="status">
           {state === "blocked" ? (

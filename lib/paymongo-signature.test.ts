@@ -8,7 +8,7 @@ import {
 
 describe("PayMongo signature verification", () => {
   const rawBody = '{"data":{"id":"evt_test"}}';
-  const secret = "whsk_test_secret";
+  const secret = "webhook-test-secret";
   const timestamp = 1_777_777_777;
   const signature = createHmac("sha256", secret)
     .update(`${timestamp}.${rawBody}`)

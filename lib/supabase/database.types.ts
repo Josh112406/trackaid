@@ -179,7 +179,9 @@ export type Database = {
           id: string;
           is_demonstration: boolean;
           location: string;
+          net_received_centavos: number;
           organization_id: string;
+          processing_fee_centavos: number;
           published_at: string | null;
           received_centavos: number;
           slug: string;
@@ -198,7 +200,9 @@ export type Database = {
           id?: string;
           is_demonstration?: boolean;
           location: string;
+          net_received_centavos?: number;
           organization_id: string;
+          processing_fee_centavos?: number;
           published_at?: string | null;
           received_centavos?: number;
           slug: string;
@@ -217,7 +221,9 @@ export type Database = {
           id?: string;
           is_demonstration?: boolean;
           location?: string;
+          net_received_centavos?: number;
           organization_id?: string;
+          processing_fee_centavos?: number;
           published_at?: string | null;
           received_centavos?: number;
           slug?: string;
@@ -357,11 +363,16 @@ export type Database = {
           created_at: string;
           currency: string;
           donor_user_id: string | null;
+          fee_centavos: number;
           id: string;
+          livemode: boolean | null;
+          net_amount_centavos: number;
           paid_at: string | null;
+          payment_method_type: string | null;
+          paymongo_checkout_session_id: string | null;
           paymongo_event_id: string | null;
           paymongo_payment_id: string | null;
-          paymongo_payment_intent_id: string;
+          paymongo_payment_intent_id: string | null;
           status: Database["public"]["Enums"]["donation_status"];
           updated_at: string;
         };
@@ -371,11 +382,16 @@ export type Database = {
           created_at?: string;
           currency?: string;
           donor_user_id?: string | null;
+          fee_centavos?: number;
           id: string;
+          livemode?: boolean | null;
+          net_amount_centavos?: number;
           paid_at?: string | null;
+          payment_method_type?: string | null;
+          paymongo_checkout_session_id?: string | null;
           paymongo_event_id?: string | null;
           paymongo_payment_id?: string | null;
-          paymongo_payment_intent_id: string;
+          paymongo_payment_intent_id?: string | null;
           status?: Database["public"]["Enums"]["donation_status"];
           updated_at?: string;
         };
@@ -385,11 +401,16 @@ export type Database = {
           created_at?: string;
           currency?: string;
           donor_user_id?: string | null;
+          fee_centavos?: number;
           id?: string;
+          livemode?: boolean | null;
+          net_amount_centavos?: number;
           paid_at?: string | null;
+          payment_method_type?: string | null;
+          paymongo_checkout_session_id?: string | null;
           paymongo_event_id?: string | null;
           paymongo_payment_id?: string | null;
-          paymongo_payment_intent_id?: string;
+          paymongo_payment_intent_id?: string | null;
           status?: Database["public"]["Enums"]["donation_status"];
           updated_at?: string;
         };
@@ -616,6 +637,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "organization_verification_submissions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_payment_destinations: {
+        Row: {
+          created_at: string;
+          organization_id: string;
+          paymongo_merchant_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: string;
+          submitted_by: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          organization_id: string;
+          paymongo_merchant_id: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          submitted_by: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          organization_id?: string;
+          paymongo_merchant_id?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: string;
+          submitted_by?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_payment_destinations_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: true;
             referencedRelation: "organizations";

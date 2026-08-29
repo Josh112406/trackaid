@@ -27,6 +27,8 @@ export type Campaign = {
   targetBeneficiaries: string;
   fundingGoalCentavos: number;
   receivedCentavos: number;
+  processingFeeCentavos: number;
+  netReceivedCentavos: number;
   disbursedCentavos: number;
   status: "published" | "closed";
   events: AuditEvent[];

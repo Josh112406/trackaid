@@ -45,7 +45,9 @@ export function DonationCheckout({ campaignId }: { campaignId: string }) {
       <h2>Donate through PayMongo</h2>
       <p>
         Choose an amount, then complete payment on PayMongo’s secure checkout
-        page.
+        page. Live proceeds route to the independently approved organization
+        recipient; TrackAid records the exact PHP amount on Polygon without
+        converting it to cryptocurrency.
       </p>
       <label>
         Amount in Philippine pesos

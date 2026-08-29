@@ -6,6 +6,7 @@ export type AdminAccess =
       mode: "authenticated";
       role: "owner" | "reviewer" | "auditor";
       email: string;
+      userId: string;
     }
   | { mode: "unauthorized" };
 
@@ -30,6 +31,7 @@ export async function getAdminAccess(): Promise<AdminAccess> {
     mode: "authenticated",
     role: admin.role as "owner" | "reviewer" | "auditor",
     email: userData.user.email ?? "Administrator",
+    userId: userData.user.id,
   };
 }
 

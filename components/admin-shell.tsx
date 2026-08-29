@@ -11,6 +11,7 @@ import {
   FileClock,
   Gauge,
   LayoutDashboard,
+  Landmark,
   ScrollText,
   ShieldCheck,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const items = [
   ["Overview", "/admin", LayoutDashboard],
   ["Programs", "/admin/programs", ClipboardCheck],
   ["Transactions", "/admin/transactions", CircleDollarSign],
+  ["Payout routing", "/admin/payouts", Landmark],
   ["External sources", "/admin/sources", ExternalLink],
   ["Evidence", "/admin/evidence", FileClock],
   ["Blockchain", "/admin/blockchain", Blocks],

@@ -7,7 +7,7 @@ type CheckoutSessionResponse = {
     attributes: {
       checkout_url: string;
       status: string;
-      payment_intent?: { id?: string };
+      livemode?: boolean;
     };
   };
   errors?: Array<{ detail?: string }>;
@@ -21,6 +21,7 @@ export async function createPayMongoCheckoutSession(input: {
   campaignTitle: string;
   amountCentavos: number;
   origin: string;
+  recipientMerchantId?: string | null;
 }) {
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
   if (!secretKey)
@@ -32,8 +33,39 @@ export async function createPayMongoCheckoutSession(input: {
     .update(`trackaid-checkout:${input.campaignId}:${donationId}`)
     .digest("hex");
   const campaignUrl = `${input.origin}/campaigns/${input.campaignSlug}`;
+  const attributes: Record<string, unknown> = {
+    cancel_url: `${campaignUrl}?checkout=cancelled`,
+    success_url: `${campaignUrl}?checkout=success`,
+    description: `Donation to ${input.campaignTitle}`,
+    payment_method_types: ["card", "gcash", "paymaya", "grab_pay", "qrph"],
+    line_items: [
+      {
+        amount: input.amountCentavos,
+        currency: "PHP",
+        description: "Disaster-relief campaign contribution",
+        name: input.campaignTitle,
+        quantity: 1,
+      },
+    ],
+    merchant: "TrackAid",
+    reference_number: donationId,
+    send_email_receipt: true,
+    show_description: true,
+    show_line_items: true,
+    metadata: {
+      campaign_id: input.campaignId,
+      campaign_slug: input.campaignSlug,
+      donation_id: donationId,
+      amount_centavos: String(input.amountCentavos),
+    },
+  };
+  if (input.recipientMerchantId) {
+    attributes.split_payment = {
+      transfer_to: input.recipientMerchantId,
+    };
+  }
   const response = await fetch(
-    "https://api.paymongo.com/v1/checkout_sessions",
+    "https://api.paymongo.com/v2/checkout_sessions",
     {
       method: "POST",
       headers: {
@@ -44,37 +76,7 @@ export async function createPayMongoCheckoutSession(input: {
       },
       body: JSON.stringify({
         data: {
-          attributes: {
-            cancel_url: `${campaignUrl}?checkout=cancelled`,
-            success_url: `${campaignUrl}?checkout=success`,
-            description: `Donation to ${input.campaignTitle}`,
-            payment_method_types: [
-              "card",
-              "gcash",
-              "paymaya",
-              "grab_pay",
-              "qrph",
-            ],
-            line_items: [
-              {
-                amount: input.amountCentavos,
-                currency: "PHP",
-                description: "Disaster-relief campaign contribution",
-                name: input.campaignTitle,
-                quantity: 1,
-              },
-            ],
-            merchant: "TrackAid",
-            reference_number: donationId,
-            send_email_receipt: true,
-            show_description: true,
-            show_line_items: true,
-            metadata: {
-              campaign_id: input.campaignId,
-              campaign_slug: input.campaignSlug,
-              donation_id: donationId,
-            },
-          },
+          attributes,
         },
       }),
       cache: "no-store",
@@ -91,7 +93,8 @@ export async function createPayMongoCheckoutSession(input: {
   return {
     donationId,
     checkoutSessionId: payload.data.id,
-    paymentIntentId: payload.data.attributes.payment_intent?.id ?? null,
     checkoutUrl,
+    livemode: payload.data.attributes.livemode ?? null,
+    routing: input.recipientMerchantId ? "direct_recipient" : "test_merchant",
   };
 }

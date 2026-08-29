@@ -3,7 +3,7 @@ import {
   createPayMongoCheckoutSession,
   PayMongoConfigurationError,
 } from "@/lib/paymongo";
-import { createPublicSupabaseClient } from "@/lib/supabase/public";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -26,9 +26,15 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const { data: campaign, error } = await createPublicSupabaseClient()
+  const admin = createAdminClient();
+  if (!admin)
+    return NextResponse.json(
+      { message: "Secure checkout storage is not configured." },
+      { status: 503 },
+    );
+  const { data: campaign, error } = await admin
     .from("campaigns")
-    .select("id,slug,title,status")
+    .select("id,slug,title,status,organization_id,organizations(status)")
     .eq("id", body.campaignId)
     .eq("status", "published")
     .maybeSingle();
@@ -36,6 +42,34 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { message: "This campaign is not open for donations." },
       { status: 404 },
+    );
+  const organization = campaign.organizations as { status?: string } | null;
+  if (organization?.status !== "verified")
+    return NextResponse.json(
+      { message: "This organization is not verified for donations." },
+      { status: 409 },
+    );
+  const { data: destination, error: destinationError } = await admin
+    .from("organization_payment_destinations")
+    .select("paymongo_merchant_id,status")
+    .eq("organization_id", campaign.organization_id)
+    .eq("status", "active")
+    .maybeSingle();
+  if (destinationError) {
+    console.error("PayMongo destination lookup failed", destinationError);
+    return NextResponse.json(
+      { message: "The organization payout route could not be verified." },
+      { status: 503 },
+    );
+  }
+  const liveMode = process.env.PAYMONGO_LIVE_MODE === "true";
+  if (liveMode && !destination)
+    return NextResponse.json(
+      {
+        message:
+          "Donations are paused until this organization’s direct PayMongo recipient is independently approved.",
+      },
+      { status: 409 },
     );
   try {
     const origin =
@@ -47,6 +81,33 @@ export async function POST(request: Request) {
       campaignTitle: campaign.title,
       amountCentavos: Number(body.amountCentavos),
       origin,
+      recipientMerchantId: destination?.paymongo_merchant_id ?? null,
+    });
+    const { error: donationError } = await admin.from("donations").insert({
+      id: checkout.donationId,
+      campaign_id: campaign.id,
+      paymongo_checkout_session_id: checkout.checkoutSessionId,
+      paymongo_payment_intent_id: null,
+      amount_centavos: Number(body.amountCentavos),
+      fee_centavos: 0,
+      net_amount_centavos: 0,
+      currency: "PHP",
+      status: "pending",
+      livemode: checkout.livemode ?? liveMode,
+    });
+    if (donationError) {
+      console.error("Pending donation persistence failed", donationError);
+      return NextResponse.json(
+        { message: "Checkout could not be recorded. No charge was made." },
+        { status: 500 },
+      );
+    }
+    await admin.from("analytics_events").insert({
+      event_kind: "payment_intent_created",
+      campaign_id: campaign.id,
+      path: `/campaigns/${campaign.slug}`,
+      amount_centavos: Number(body.amountCentavos),
+      metadata: { routing: checkout.routing },
     });
     return NextResponse.json(checkout, { status: 201 });
   } catch (caught) {

@@ -241,6 +241,12 @@ function Transactions({
               <td>{text(r.kind)}</td>
               <td>
                 <strong>{formatPhp(Number(r.amount_centavos ?? 0))}</strong>
+                {r.kind === "Donation" ? (
+                  <span>
+                    Net {formatPhp(Number(r.net_amount_centavos ?? 0))} · Fees{" "}
+                    {formatPhp(Number(r.fee_centavos ?? 0))}
+                  </span>
+                ) : null}
               </td>
               <td>{text(r.status)}</td>
               <td>{date(r.when)}</td>

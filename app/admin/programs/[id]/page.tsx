@@ -34,7 +34,14 @@ export default async function ProgramReviewPage({
             {String(program.official_domain)}
           </p>
         </div>
-        <ProgramReviewActions id={id} status={String(program.status)} />
+        <ProgramReviewActions
+          id={id}
+          status={String(program.status)}
+          isOwnSubmission={
+            access.mode === "authenticated" &&
+            String(program.submitted_by) === access.userId
+          }
+        />
       </header>
       <section className="admin-section">
         <div className="admin-section-heading">

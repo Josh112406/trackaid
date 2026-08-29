@@ -3,8 +3,12 @@ import { createHash } from "node:crypto";
 import { after, NextResponse } from "next/server";
 
 import { verifyPayMongoSignature } from "@/lib/paymongo-signature";
+import { processLedgerJobs } from "@/lib/ledger";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { processPayMongoEvent } from "@/lib/webhook-processing";
+import {
+  getPayMongoEventType,
+  processPayMongoEvent,
+} from "@/lib/webhook-processing";
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -33,15 +37,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const payload = JSON.parse(rawBody) as Record<string, unknown>;
-  const event = payload.data as
-    { id?: string; attributes?: { type?: string } } | undefined;
-  if (!event?.id) {
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(rawBody) as Record<string, unknown>;
+  } catch {
     return NextResponse.json(
-      { error: "Missing event identifier." },
+      { error: "Invalid JSON payload." },
       { status: 400 },
     );
   }
+  const event = payload.data as
+    { id?: string; attributes?: { type?: string } } | undefined;
+  const payloadSha256 = createHash("sha256").update(rawBody).digest("hex");
+  const eventId = event?.id ?? `sha256:${payloadSha256}`;
+  const eventType = getPayMongoEventType(payload);
 
   const admin = createAdminClient();
   if (!admin) {
@@ -52,9 +61,9 @@ export async function POST(request: Request) {
   }
 
   const { error } = await admin.from("webhook_events").insert({
-    id: event.id,
-    event_type: event.attributes?.type ?? "unknown",
-    payload_sha256: createHash("sha256").update(rawBody).digest("hex"),
+    id: eventId,
+    event_type: eventType,
+    payload_sha256: payloadSha256,
     status: "received",
   });
 
@@ -69,6 +78,9 @@ export async function POST(request: Request) {
     );
   }
 
-  after(() => processPayMongoEvent(payload));
+  after(async () => {
+    const result = await processPayMongoEvent(payload, eventId);
+    if (result === "paid") await processLedgerJobs(1);
+  });
   return NextResponse.json({ received: true });
 }

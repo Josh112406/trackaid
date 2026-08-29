@@ -22,13 +22,13 @@ export async function loadAdminData(): Promise<AdminData> {
     supabase
       .from("campaigns")
       .select(
-        "id,title,slug,status,received_centavos,disbursed_centavos,funding_goal_centavos,created_at",
+        "id,title,slug,status,received_centavos,processing_fee_centavos,net_received_centavos,disbursed_centavos,funding_goal_centavos,created_at",
       )
       .order("created_at", { ascending: false }),
     supabase
       .from("donations")
       .select(
-        "id,campaign_id,paymongo_payment_id,paymongo_payment_intent_id,amount_centavos,status,paid_at,created_at,campaigns(title)",
+        "id,campaign_id,paymongo_payment_id,paymongo_payment_intent_id,paymongo_checkout_session_id,amount_centavos,fee_centavos,net_amount_centavos,payment_method_type,livemode,status,paid_at,created_at,campaigns(title)",
       )
       .order("created_at", { ascending: false })
       .limit(100),
@@ -42,7 +42,7 @@ export async function loadAdminData(): Promise<AdminData> {
     supabase
       .from("program_submissions")
       .select(
-        "id,organization_name,program_name,status,official_domain,created_at,submitted_at,reviewed_at",
+        "id,organization_name,program_name,status,official_domain,submitted_by,reviewed_by,created_at,submitted_at,reviewed_at",
       )
       .order("created_at", { ascending: false })
       .limit(100),

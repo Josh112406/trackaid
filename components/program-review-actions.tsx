@@ -7,14 +7,22 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 export function ProgramReviewActions({
   id,
   status,
+  isOwnSubmission,
 }: {
   id: string;
   status: string;
+  isOwnSubmission: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   async function update(next: "approved" | "needs_information" | "rejected") {
+    if (isOwnSubmission && (next === "approved" || next === "rejected")) {
+      setMessage(
+        "A different owner or reviewer must make the final decision on this submission.",
+      );
+      return;
+    }
     setBusy(next);
     setMessage("");
     const supabase = createBrowserSupabaseClient();
@@ -47,7 +55,7 @@ export function ProgramReviewActions({
     <div className="review-actions">
       <button
         className="primary-button"
-        disabled={!!busy || status === "approved"}
+        disabled={!!busy || status === "approved" || isOwnSubmission}
         onClick={() => update("approved")}
         type="button"
       >
@@ -69,7 +77,7 @@ export function ProgramReviewActions({
       </button>
       <button
         className="text-button danger-button"
-        disabled={!!busy}
+        disabled={!!busy || isOwnSubmission}
         onClick={() => update("rejected")}
         type="button"
       >
