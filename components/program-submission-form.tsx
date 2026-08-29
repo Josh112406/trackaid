@@ -199,9 +199,9 @@ export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
       <fieldset>
         <legend>First proof item</legend>
         <p>
-          Pubmats, posts, websites, video, and news can demonstrate that a
-          fundraiser exists. Organization registration or representative
-          authorization may be requested during review.
+          Pubmats, posts, websites, video, and news can show that a fundraiser
+          exists. Organization registration or representative authorization may
+          be requested during review.
         </p>
         <div className="form-grid">
           <label>

@@ -1,7 +1,6 @@
 import { createServerUserClient } from "@/lib/supabase/server";
 
 export type AdminAccess =
-  | { mode: "preview"; role: "owner"; email: "preview@trackaid.local" }
   | {
       mode: "authenticated";
       role: "owner" | "reviewer" | "auditor";
@@ -11,10 +10,6 @@ export type AdminAccess =
   | { mode: "unauthorized" };
 
 export async function getAdminAccess(): Promise<AdminAccess> {
-  const preview = process.env.ADMIN_PREVIEW_MODE === "true";
-  if (preview)
-    return { mode: "preview", role: "owner", email: "preview@trackaid.local" };
-
   const supabase = await createServerUserClient();
   if (!supabase) return { mode: "unauthorized" };
   const { data: userData } = await supabase.auth.getUser();

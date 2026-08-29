@@ -34,11 +34,10 @@ export async function POST(request: Request) {
     );
   const { data: campaign, error } = await admin
     .from("campaigns")
-    .select(
-      "id,slug,title,status,is_demonstration,organization_id,organizations(status)",
-    )
+    .select("id,slug,title,status,organization_id,organizations(status)")
     .eq("id", body.campaignId)
     .eq("status", "published")
+    .eq("is_demonstration", false)
     .maybeSingle();
   if (error || !campaign)
     return NextResponse.json(
@@ -65,11 +64,6 @@ export async function POST(request: Request) {
     );
   }
   const liveMode = process.env.PAYMONGO_LIVE_MODE === "true";
-  if (campaign.is_demonstration && liveMode)
-    return NextResponse.json(
-      { message: "The payment sandbox is disabled in live mode." },
-      { status: 409 },
-    );
   if (liveMode && !destination)
     return NextResponse.json(
       {

@@ -35,7 +35,7 @@ export default async function EvidenceRecordPage({
         <div className="evidence-record-icon">
           <Fingerprint size={34} />
         </div>
-        <span className="demo-label">Integrity record</span>
+        <span className="section-label">Integrity record</span>
         <h1>Evidence hash</h1>
         <p>{record.public_detail}</p>
         <a

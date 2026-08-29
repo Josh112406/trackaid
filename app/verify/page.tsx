@@ -12,7 +12,7 @@ export default function VerifyOrganizationPage() {
   return (
     <main id="main-content" className="verify-page">
       <section className="verify-intro">
-        <span className="demo-label">Organization verification</span>
+        <span className="section-label">Organization verification</span>
         <h1>Campaign access begins with organization verification.</h1>
         <p>
           TrackAid does not approve organizations from an email address alone.

@@ -27,7 +27,7 @@ export default async function PublicAuditPage() {
 
   return (
     <main id="main-content" className="simple-page content-page">
-      <span className="demo-label">Public audit</span>
+      <span className="section-label">Public audit</span>
       <h1>Read the money trail without exposing private records.</h1>
       <p className="page-lede">
         Gross donations, PayMongo fees, net recipient amounts, confirmed

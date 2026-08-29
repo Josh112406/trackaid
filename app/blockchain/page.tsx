@@ -3,7 +3,7 @@ export default function BlockchainPage() {
   const address = process.env.TRACKAID_LEDGER_ADDRESS;
   return (
     <main id="main-content" className="simple-page content-page">
-      <span className="demo-label">Blockchain audit layer</span>
+      <span className="section-label">Blockchain audit layer</span>
       <h1>Hashes on-chain. Donations in pesos.</h1>
       <p className="page-lede">
         The TrackAidLedger contract is an append-only EVM audit log. It never

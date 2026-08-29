@@ -7,7 +7,7 @@ import {
 export default function HowItWorksPage() {
   return (
     <main id="main-content" className="simple-page content-page">
-      <span className="demo-label">How it works</span>
+      <span className="section-label">How it works</span>
       <h1>One chain of custody from payment to proof.</h1>
       <p className="page-lede">
         TrackAid separates payment processing, evidence review, and public

@@ -22,7 +22,7 @@ export default async function HomePage() {
     <main id="main-content">
       <section className="hero">
         <div className="hero-copy">
-          <span className="demo-label">Public relief ledger</span>
+          <span className="section-label">Public relief ledger</span>
           <h1>Disaster relief people can follow, peso by peso.</h1>
           <p className="hero-lede">
             TrackAid connects Philippine payment rails to a public record of

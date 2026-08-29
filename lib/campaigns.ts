@@ -15,7 +15,6 @@ type CampaignRow = {
   net_received_centavos: number;
   disbursed_centavos: number;
   status: "published" | "closed";
-  is_demonstration: boolean;
   organizations: { name: string } | null;
   audit_entries: Array<{
     id: string;
@@ -46,7 +45,6 @@ function mapCampaign(row: CampaignRow): Campaign {
     netReceivedCentavos: Number(row.net_received_centavos),
     disbursedCentavos: Number(row.disbursed_centavos),
     status: row.status,
-    isDemonstration: row.is_demonstration,
     events: row.audit_entries.map((event) => ({
       id: event.id,
       type: event.entity_type,
@@ -65,7 +63,7 @@ function mapCampaign(row: CampaignRow): Campaign {
   };
 }
 
-const campaignSelect = `id, slug, title, disaster_name, location, summary, target_beneficiaries, funding_goal_centavos, received_centavos, processing_fee_centavos, net_received_centavos, disbursed_centavos, status, is_demonstration, organizations(name), audit_entries(id, entity_type, title, public_detail, amount_centavos, occurred_at, status, ledger_tx_hash, evidence_sha256)`;
+const campaignSelect = `id, slug, title, disaster_name, location, summary, target_beneficiaries, funding_goal_centavos, received_centavos, processing_fee_centavos, net_received_centavos, disbursed_centavos, status, organizations(name), audit_entries(id, entity_type, title, public_detail, amount_centavos, occurred_at, status, ledger_tx_hash, evidence_sha256)`;
 
 export async function loadPublishedCampaigns() {
   const { data, error } = await createPublicSupabaseClient()
@@ -83,6 +81,7 @@ export async function loadCampaignBySlug(slug: string) {
     .from("campaigns")
     .select(campaignSelect)
     .eq("slug", slug)
+    .eq("is_demonstration", false)
     .in("status", ["published", "closed"])
     .maybeSingle();
   if (error || !data) return null;

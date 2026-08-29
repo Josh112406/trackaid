@@ -124,20 +124,19 @@ vercel.json                  Scheduled ledger processing
 
 ### Environment variables
 
-| Variable                               | Required         | Purpose                                                    |
-| -------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                 | Production       | Stable origin used in PayMongo return URLs                 |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Yes              | Supabase project API URL                                   |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes              | Browser-safe Supabase key                                  |
-| `SUPABASE_SECRET_KEY`                  | Yes              | Server-only database administration key                    |
-| `PAYMONGO_SECRET_KEY`                  | For payments     | Server-only PayMongo test or live secret key               |
-| `PAYMONGO_WEBHOOK_SECRET`              | For payments     | Verifies the `Paymongo-Signature` header                   |
-| `PAYMONGO_LIVE_MODE`                   | Yes              | `false` for test keys; `true` for live keys                |
-| `POLYGON_AMOY_RPC_URL`                 | For anchoring    | Polygon Amoy JSON-RPC endpoint                             |
-| `TRACKAID_LEDGER_ADDRESS`              | For anchoring    | Deployed `TrackAidLedger` contract address                 |
-| `TRACKAID_RECORDER_PRIVATE_KEY`        | For anchoring    | Server-only key authorized as contract recorder            |
-| `CRON_SECRET`                          | Production       | Authorizes the scheduled ledger worker                     |
-| `ADMIN_PREVIEW_MODE`                   | Development only | Enables preview administration; never enable in production |
+| Variable                               | Required      | Purpose                                         |
+| -------------------------------------- | ------------- | ----------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                 | Production    | Stable origin used in PayMongo return URLs      |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Yes           | Supabase project API URL                        |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes           | Browser-safe Supabase key                       |
+| `SUPABASE_SECRET_KEY`                  | Yes           | Server-only database administration key         |
+| `PAYMONGO_SECRET_KEY`                  | For payments  | Server-only PayMongo test or live secret key    |
+| `PAYMONGO_WEBHOOK_SECRET`              | For payments  | Verifies the `Paymongo-Signature` header        |
+| `PAYMONGO_LIVE_MODE`                   | Yes           | `false` for test keys; `true` for live keys     |
+| `POLYGON_AMOY_RPC_URL`                 | For anchoring | Polygon Amoy JSON-RPC endpoint                  |
+| `TRACKAID_LEDGER_ADDRESS`              | For anchoring | Deployed `TrackAidLedger` contract address      |
+| `TRACKAID_RECORDER_PRIVATE_KEY`        | For anchoring | Server-only key authorized as contract recorder |
+| `CRON_SECRET`                          | Production    | Authorizes the scheduled ledger worker          |
 
 The Supabase Edge Function uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, which Supabase provides to deployed functions.
 

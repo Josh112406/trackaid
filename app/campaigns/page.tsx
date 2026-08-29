@@ -21,7 +21,7 @@ export default async function CampaignDirectoryPage() {
         </Link>
         <div className="campaign-directory-heading">
           <div>
-            <span className="demo-label">Campaign directory</span>
+            <span className="section-label">Campaign directory</span>
             <h1>Fund relief. Follow the record.</h1>
           </div>
           <p>

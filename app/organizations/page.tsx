@@ -3,7 +3,7 @@ import { ArrowRight, Building2, FileCheck2, Landmark } from "lucide-react";
 export default function OrganizationsPage() {
   return (
     <main id="main-content" className="simple-page content-page">
-      <span className="demo-label">Organizations</span>
+      <span className="section-label">Organizations</span>
       <h1>Publish a program only after authority is proven.</h1>
       <p className="page-lede">
         Organization-owned pages can submit fundraising programs. Review

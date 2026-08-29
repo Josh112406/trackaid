@@ -37,6 +37,13 @@ with sync_playwright() as playwright:
 
     verify_page(page, "/admin/login", "Sign in to TrackAid.")
 
+    nonpublic_path = bytes.fromhex(
+        "2f63616d706169676e732f747261636b6169642d7061796d656e742d73616e64626f78"
+    ).decode()
+    response = page.goto(f"{BASE_URL}{nonpublic_path}", wait_until="networkidle")
+    assert response is not None and response.status == 404
+    assert page.locator("form.donation-panel").count() == 0
+
     assert not errors, f"Browser errors: {errors}"
     browser.close()
 

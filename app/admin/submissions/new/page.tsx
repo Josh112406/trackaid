@@ -23,23 +23,7 @@ export default async function NewProgramSubmissionPage() {
           final decision before publication.
         </p>
       </div>
-      {access.mode === "preview" ? (
-        <div className="admin-preview-banner">
-          <CirclePreview />
-          <div>
-            <strong>Database access required</strong>
-            <p>
-              Sign in with an authorized Supabase account to save programs and
-              evidence.
-            </p>
-          </div>
-        </div>
-      ) : null}
       <ProgramSubmissionForm mode="admin" />
     </main>
   );
-}
-
-function CirclePreview() {
-  return <span className="preview-dot" aria-hidden="true" />;
 }
