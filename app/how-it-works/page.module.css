@@ -1,0 +1,87 @@
+.workflow {
+  position: relative;
+  margin-top: 8px;
+  margin-bottom: 40px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.workflow::before {
+  position: absolute;
+  z-index: -1;
+  top: 36px;
+  right: 5%;
+  left: 5%;
+  height: 2px;
+  background: var(--moss);
+  content: "";
+}
+
+.workflow .card {
+  display: grid;
+  min-height: 292px;
+  padding: 26px;
+  border: 1px solid var(--moss);
+  border-radius: 32px 16px 32px 16px;
+  background: var(--sage);
+  color: var(--ink);
+  grid-template-rows: auto 1fr auto auto;
+}
+
+.workflow .card:nth-child(2) {
+  border-radius: 16px 32px 16px 32px;
+  background: var(--oat);
+}
+
+.workflow .card:nth-child(3) {
+  background: var(--clay);
+}
+
+.workflow .card:nth-child(4) {
+  border-radius: 16px 32px 16px 32px;
+  background: var(--ochre);
+}
+
+.workflow .card > .number {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--moss);
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.icon {
+  align-self: end;
+  margin-bottom: 18px;
+}
+
+.workflow .card .title {
+  margin: 0 0 10px;
+  color: var(--ink);
+  line-height: 1.05;
+}
+
+.workflow .card .description {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 940px) {
+  .workflow::before {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .workflow .card {
+    min-height: 260px;
+  }
+}
