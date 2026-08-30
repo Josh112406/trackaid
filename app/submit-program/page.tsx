@@ -43,7 +43,7 @@ export default async function SubmitProgramPage() {
         >
           <div>
             <ShieldCheck size={21} />
-            <span>Submitters cannot approve their own program</span>
+            <span>Every approval is recorded in the audit log</span>
           </div>
           <div>
             <FileCheck2 size={21} />

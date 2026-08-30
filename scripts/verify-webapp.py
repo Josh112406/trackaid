@@ -33,7 +33,7 @@ with sync_playwright() as playwright:
         "/submit-program",
         "Submit a fundraiser from its official source.",
     )
-    page.get_by_text("Submitters cannot approve their own program").wait_for()
+    page.get_by_text("Every approval is recorded in the audit log").wait_for()
 
     verify_page(page, "/admin/login", "Sign in to TrackAid.")
 

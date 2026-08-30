@@ -274,7 +274,7 @@ export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
           ) : (
             <Send size={18} aria-hidden="true" />
           )}
-          Submit for independent review
+          Submit for review
         </button>
       </div>
       {message ? (

@@ -29,7 +29,7 @@ with sync_playwright() as playwright:
     assert page.get_by_role("heading", name="Submit a fundraiser from its official source.").is_visible()
     assert page.get_by_role("heading", name="Sign in to submit").is_visible()
     assert page.get_by_role("textbox", name="Email address").is_visible()
-    assert page.get_by_text("Public submissions cannot approve themselves.").is_visible()
+    assert page.get_by_text("Programs must be reviewed before publication.").is_visible()
 
     artifact_dir = Path("artifacts")
     artifact_dir.mkdir(exist_ok=True)

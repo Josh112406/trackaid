@@ -1,23 +1,31 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CheckCircle2, CircleAlert, LoaderCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlert,
+  LoaderCircle,
+  ShieldCheck,
+} from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export function ProgramReviewActions({
   id,
   status,
   isOwnSubmission,
+  canApproveOwnSubmission,
 }: {
   id: string;
   status: string;
   isOwnSubmission: boolean;
+  canApproveOwnSubmission: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const usesOwnerOverride = isOwnSubmission && canApproveOwnSubmission;
   async function update(next: "approved" | "needs_information" | "rejected") {
-    if (isOwnSubmission && (next === "approved" || next === "rejected")) {
+    if (isOwnSubmission && next === "approved" && !canApproveOwnSubmission) {
       setMessage(
         "A different owner or reviewer must make the final decision on this submission.",
       );
@@ -55,7 +63,11 @@ export function ProgramReviewActions({
     <div className="review-actions">
       <button
         className="primary-button"
-        disabled={!!busy || status === "approved" || isOwnSubmission}
+        disabled={
+          !!busy ||
+          status === "approved" ||
+          (isOwnSubmission && !canApproveOwnSubmission)
+        }
         onClick={() => update("approved")}
         type="button"
       >
@@ -83,6 +95,12 @@ export function ProgramReviewActions({
       >
         Reject
       </button>
+      {usesOwnerOverride && status !== "approved" ? (
+        <p className="review-policy-note">
+          <ShieldCheck size={16} />
+          This approval will be recorded as an owner override.
+        </p>
+      ) : null}
       {message ? (
         <p className="form-message form-message-neutral" role="status">
           {message}

@@ -156,7 +156,7 @@ Row Level Security is enabled on public operational tables. Sensitive server ope
 
 ### Review controls
 
-- A submitter cannot approve their own program.
+- Reviewers cannot approve their own program. A sole owner may approve their own submission, and the audit log marks the decision as an owner override.
 - A payment destination must be submitted by one owner or reviewer and approved by another.
 - Live donations are blocked when the verified organization has no active payout destination.
 - Private evidence files stay in access-controlled Supabase Storage; only their fingerprints and redacted context are public.

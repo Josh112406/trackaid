@@ -62,8 +62,8 @@ export function ProgramSubmitterSignIn() {
         </p>
       ) : null}
       <small>
-        TrackAid administrators use a separate protected area. Public
-        submissions cannot approve themselves.
+        TrackAid administrators use a separate protected area. Programs must be
+        reviewed before publication.
       </small>
       <Link className="text-link" href="/organizations">
         Read the verification requirements

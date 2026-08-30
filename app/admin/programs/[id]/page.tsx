@@ -22,12 +22,14 @@ export default async function ProgramReviewPage({
   return (
     <AdminShell email={access.email} role={access.role}>
       <header className="admin-topbar">
-        <div>
-          <Link className="back-link" href="/admin/programs">
-            <ArrowLeft size={16} />
-            Programs
-          </Link>
-          <span className="eyebrow">Proof review</span>
+        <div className="admin-review-heading">
+          <div className="admin-review-context">
+            <Link className="back-link" href="/admin/programs">
+              <ArrowLeft size={16} />
+              Programs
+            </Link>
+            <span className="eyebrow">Proof review</span>
+          </div>
           <h1>{String(program.program_name)}</h1>
           <p>
             {String(program.organization_name)} ·{" "}
@@ -40,6 +42,9 @@ export default async function ProgramReviewPage({
           isOwnSubmission={
             access.mode === "authenticated" &&
             String(program.submitted_by) === access.userId
+          }
+          canApproveOwnSubmission={
+            access.mode === "authenticated" && access.role === "owner"
           }
         />
       </header>
