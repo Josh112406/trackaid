@@ -1,11 +1,14 @@
+import "server-only";
+
 import { createClient } from "@supabase/supabase-js";
 
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/database.types";
 
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secretKey) return null;
+  if (!secretKey) return null;
+  const { url } = getSupabasePublicConfig();
 
   return createClient<Database>(url, secretKey, {
     auth: {

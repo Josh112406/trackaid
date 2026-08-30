@@ -1,5 +1,7 @@
 export function csvCell(value: string | number) {
-  const normalized = String(value).replaceAll('"', '""');
+  const text = String(value);
+  const safe = /^[\t\r\n ]*[=+\-@]/.test(text) ? `'${text}` : text;
+  const normalized = safe.replaceAll('"', '""');
   return `"${normalized}"`;
 }
 

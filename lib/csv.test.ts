@@ -12,4 +12,10 @@ describe("CSV reports", () => {
   it("returns an empty file for no rows", () => {
     expect(toCsv([])).toBe("");
   });
+
+  it("neutralizes spreadsheet formulas in user-controlled cells", () => {
+    expect(toCsv([{ name: '=HYPERLINK("https://example.org")' }])).toBe(
+      '"name"\r\n"\'=HYPERLINK(""https://example.org"")"',
+    );
+  });
 });

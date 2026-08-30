@@ -13,7 +13,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 4_000_000;
 const MIME_BY_EXTENSION: Record<string, string> = {
   pdf: "application/pdf",
   jpg: "image/jpeg",
@@ -24,30 +24,11 @@ const MIME_BY_EXTENSION: Record<string, string> = {
 
 type AccessState = "checking" | "ready" | "signed-out" | "forbidden";
 
-function slugifyOrganization(name: string) {
-  const base = name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
-
-  return `${base || "organization"}-${crypto.randomUUID().slice(0, 8)}`;
-}
-
 function fileDetails(file: File) {
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   const inferredMime = MIME_BY_EXTENSION[extension];
   if (!inferredMime || (file.type && file.type !== inferredMime)) return null;
   return { extension, mimeType: file.type || inferredMime };
-}
-
-async function sha256Hex(buffer: ArrayBuffer) {
-  const digest = await crypto.subtle.digest("SHA-256", buffer);
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
 }
 
 export function OrganizationVerificationForm() {
@@ -57,6 +38,7 @@ export function OrganizationVerificationForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [complete, setComplete] = useState(false);
+  const [startedAt, setStartedAt] = useState(() => Date.now());
 
   useEffect(() => {
     let active = true;
@@ -132,7 +114,7 @@ export function OrganizationVerificationForm() {
       return;
     }
     if (file.size < 1 || file.size > MAX_FILE_SIZE) {
-      setMessage("The document must be no larger than 10 MB.");
+      setMessage("The document must be no larger than 4 MB.");
       return;
     }
     if (file.name.length > 255) {
@@ -146,80 +128,33 @@ export function OrganizationVerificationForm() {
       return;
     }
 
+    values.set("organizationName", organizationName);
+    values.set("officialEmail", officialEmail);
+    values.set("settlementAccountHolder", settlementAccountHolder);
+
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    if (!user) {
-      setLoading(false);
-      setAccess("signed-out");
-      setMessage("Your session expired. Sign in again before submitting.");
-      return;
-    }
-
-    const { data: organization, error: organizationError } = await supabase
-      .from("organizations")
-      .insert({
-        owner_user_id: user.id,
-        name: organizationName,
-        slug: slugifyOrganization(organizationName),
-        status: "pending",
-      })
-      .select("id")
-      .single();
-
-    if (organizationError || !organization) {
-      setLoading(false);
-      setMessage("The organization record could not be created. Try again.");
-      return;
-    }
-
-    const fileId = crypto.randomUUID();
-    const objectPath = `${organization.id}/verification/${fileId}.${details.extension}`;
-
+    values.set("startedAt", String(startedAt));
     try {
-      const fileBuffer = await file.arrayBuffer();
-      const evidenceHash = await sha256Hex(fileBuffer);
-      const { error: uploadError } = await supabase.storage
-        .from("organization-evidence")
-        .upload(objectPath, fileBuffer, {
-          cacheControl: "3600",
-          contentType: details.mimeType,
-          upsert: false,
-        });
-
-      if (uploadError) {
-        await supabase.from("organizations").delete().eq("id", organization.id);
-        throw new Error("upload");
+      const response = await fetch("/api/organizations/submit", {
+        method: "POST",
+        body: values,
+      });
+      const result = (await response.json().catch(() => null)) as {
+        fingerprint?: string;
+        message?: string;
+      } | null;
+      if (!response.ok) {
+        setMessage(
+          result?.message ?? "The document could not be saved securely.",
+        );
+        return;
       }
-
-      const { error: submissionError } = await supabase
-        .from("organization_verification_submissions")
-        .insert({
-          organization_id: organization.id,
-          submitted_by: user.id,
-          official_email: officialEmail,
-          settlement_account_holder: settlementAccountHolder,
-          permit_object_path: objectPath,
-          permit_original_name: file.name,
-          permit_mime_type: details.mimeType,
-          permit_size_bytes: file.size,
-          permit_sha256: evidenceHash,
-          status: "submitted",
-        });
-
-      if (submissionError) {
-        await supabase.storage
-          .from("organization-evidence")
-          .remove([objectPath]);
-        await supabase.from("organizations").delete().eq("id", organization.id);
-        throw new Error("metadata");
-      }
-
       currentForm.reset();
       setFile(null);
       setComplete(true);
+      setStartedAt(Date.now());
       setMessage(
-        `Submitted for review. Evidence fingerprint: ${evidenceHash.slice(0, 12)}…`,
+        `Submitted for review. Evidence fingerprint: ${result?.fingerprint}`,
       );
     } catch {
       setMessage(
@@ -234,6 +169,10 @@ export function OrganizationVerificationForm() {
 
   return (
     <form className="verification-form" onSubmit={submit}>
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
       <label>
         Legal organization name
         <input
@@ -291,7 +230,7 @@ export function OrganizationVerificationForm() {
         </span>
         <span className="verification-file-hint">
           <LockKeyhole size={14} aria-hidden="true" /> Private Supabase storage
-          · PDF, JPG, PNG or WebP · Maximum 10 MB
+          · PDF, JPG, PNG or WebP · Maximum 4 MB
         </span>
       </label>
       <label>

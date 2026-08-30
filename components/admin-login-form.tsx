@@ -5,25 +5,32 @@ import { LoaderCircle, LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-
 export function AdminLoginForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [startedAt] = useState(() => Date.now());
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const supabase = createBrowserSupabaseClient();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: String(form.get("email") ?? ""),
-      password: String(form.get("password") ?? ""),
+    const response = await fetch("/api/auth/admin-login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: form.get("email"),
+        password: form.get("password"),
+        website: form.get("website"),
+        startedAt,
+      }),
     });
+    const result = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
     setLoading(false);
-    if (error) {
-      setMessage("The email or password is incorrect.");
+    if (!response.ok) {
+      setMessage(result?.message ?? "The email or password is incorrect.");
       return;
     }
     router.replace("/admin");
@@ -32,10 +39,20 @@ export function AdminLoginForm() {
 
   return (
     <form className="admin-login-form" onSubmit={submit}>
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
       <LockKeyhole size={30} aria-hidden="true" />
       <label>
         Email
-        <input name="email" type="email" autoComplete="email" required />
+        <input
+          name="email"
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          required
+        />
       </label>
       <label>
         Password
@@ -43,6 +60,8 @@ export function AdminLoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
+          minLength={12}
+          maxLength={200}
           required
         />
       </label>

@@ -1,14 +1,14 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-import type { Database } from "@/lib/supabase/database.types";
 import {
-  trackAidProjectUrl,
-  trackAidPublishableKey,
-} from "@/lib/supabase/public";
+  getSupabasePublicConfig,
+  supabaseAuthCookieOptions,
+} from "@/lib/supabase/config";
+import type { Database } from "@/lib/supabase/database.types";
 
 export function createBrowserSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? trackAidProjectUrl;
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? trackAidPublishableKey;
-  return createBrowserClient<Database>(url, publishableKey);
+  const { url, publishableKey } = getSupabasePublicConfig();
+  return createBrowserClient<Database>(url, publishableKey, {
+    cookieOptions: supabaseAuthCookieOptions,
+  });
 }

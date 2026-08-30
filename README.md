@@ -136,6 +136,9 @@ vercel.json                  Scheduled ledger processing
 | `POLYGON_AMOY_RPC_URL`                 | For anchoring | Polygon Amoy JSON-RPC endpoint                  |
 | `TRACKAID_LEDGER_ADDRESS`              | For anchoring | Deployed `TrackAidLedger` contract address      |
 | `TRACKAID_RECORDER_PRIVATE_KEY`        | For anchoring | Server-only key authorized as contract recorder |
+| `TRACKAID_LEDGER_OWNER_ADDRESS`        | Optional      | Contract owner; defaults to the recorder wallet |
+| `TRACKAID_LEDGER_RECORDER_ADDRESS`     | Optional      | Recorder role; defaults to the recorder wallet  |
+| `SECURITY_HASH_PEPPER`                 | Optional      | Dedicated server-only rate-limit HMAC key       |
 | `CRON_SECRET`                          | Production    | Authorizes the scheduled ledger worker          |
 
 The Supabase Edge Function uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, which Supabase provides to deployed functions.
@@ -225,20 +228,27 @@ Compile the contract with:
 pnpm contract:compile
 ```
 
-The artifact is written to `artifacts/TrackAidLedger.json` and is intentionally ignored by Git. Deploy it to Polygon Amoy with the intended owner and recorder addresses, fund the recorder with Amoy test POL, and configure the three ledger environment variables.
+The artifact is written to `artifacts/TrackAidLedger.json` and is intentionally ignored by Git. Fund the recorder with Amoy POL, keep its private key server-only, then deploy with:
+
+```bash
+pnpm contract:deploy:amoy
+```
+
+The deployment script refuses non-Amoy RPC endpoints, verifies the recorder balance, waits for a successful receipt, and prints only the public transaction, contract, owner, and recorder addresses. Configure the returned `TRACKAID_LEDGER_ADDRESS` in Vercel before enabling the ledger worker.
 
 ## Commands
 
-| Command                 | Purpose                      |
-| ----------------------- | ---------------------------- |
-| `pnpm dev`              | Start the development server |
-| `pnpm build`            | Create a production build    |
-| `pnpm start`            | Run the production build     |
-| `pnpm typecheck`        | Check TypeScript             |
-| `pnpm lint`             | Run ESLint                   |
-| `pnpm test`             | Run the Vitest suite         |
-| `pnpm format:check`     | Check formatting             |
-| `pnpm contract:compile` | Compile `TrackAidLedger.sol` |
+| Command                     | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `pnpm dev`                  | Start the development server      |
+| `pnpm build`                | Create a production build         |
+| `pnpm start`                | Run the production build          |
+| `pnpm typecheck`            | Check TypeScript                  |
+| `pnpm lint`                 | Run ESLint                        |
+| `pnpm test`                 | Run the Vitest suite              |
+| `pnpm format:check`         | Check formatting                  |
+| `pnpm contract:compile`     | Compile `TrackAidLedger.sol`      |
+| `pnpm contract:deploy:amoy` | Deploy the ledger to Polygon Amoy |
 
 The browser verification script expects a development server on port `3100`:
 

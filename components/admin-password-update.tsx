@@ -5,6 +5,7 @@ import { KeyRound, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { strongPassword } from "@/lib/validation";
 
 export function AdminPasswordUpdate() {
   const router = useRouter();
@@ -16,8 +17,11 @@ export function AdminPasswordUpdate() {
     const form = new FormData(event.currentTarget);
     const password = String(form.get("password") ?? "");
     const confirmation = String(form.get("confirmation") ?? "");
-    if (password.length < 12)
-      return setMessage("Use at least 12 characters for your password.");
+    try {
+      strongPassword(password);
+    } catch (error) {
+      return setMessage((error as Error).message);
+    }
     if (password !== confirmation)
       return setMessage("The passwords do not match.");
 
@@ -46,6 +50,9 @@ export function AdminPasswordUpdate() {
           minLength={12}
           required
         />
+        <small>
+          12–200 characters with lowercase, uppercase, a number, and a symbol.
+        </small>
       </label>
       <label>
         Confirm new password

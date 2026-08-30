@@ -1,6 +1,8 @@
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+overrides:
+  tmp: 0.2.6
 minimumReleaseAgeExclude:
   - "@supabase/cli-darwin-arm64@2.116.0"
   - "@supabase/cli-darwin-x64@2.116.0"

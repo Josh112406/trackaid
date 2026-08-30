@@ -895,6 +895,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      consume_security_rate_limit: {
+        Args: {
+          p_key_hash: string;
+          p_limit: number;
+          p_window_seconds: number;
+        };
+        Returns: boolean;
+      };
       verify_source_monitor_secret: {
         Args: { candidate: string };
         Returns: boolean;

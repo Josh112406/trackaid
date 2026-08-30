@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "contract:compile": "tsx scripts/compile-contract.ts",
+    "contract:compile": "node --experimental-strip-types scripts/compile-contract.ts",
+    "contract:deploy:amoy": "node --experimental-strip-types scripts/deploy-contract-amoy.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -24,6 +25,7 @@
     "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "0.0.1",
     "viem": "2.56.0"
   },
   "devDependencies": {

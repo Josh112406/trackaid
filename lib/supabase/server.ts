@@ -1,19 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import type { Database } from "@/lib/supabase/database.types";
 import {
-  trackAidProjectUrl,
-  trackAidPublishableKey,
-} from "@/lib/supabase/public";
+  getSupabasePublicConfig,
+  supabaseAuthCookieOptions,
+} from "@/lib/supabase/config";
+import type { Database } from "@/lib/supabase/database.types";
 
 export async function createServerUserClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? trackAidProjectUrl;
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? trackAidPublishableKey;
+  const { url, publishableKey } = getSupabasePublicConfig();
 
   const cookieStore = await cookies();
   return createServerClient<Database>(url, publishableKey, {
+    cookieOptions: supabaseAuthCookieOptions,
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (values) => {

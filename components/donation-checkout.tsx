@@ -11,9 +11,11 @@ import {
 export function DonationCheckout({ campaignId }: { campaignId: string }) {
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [startedAt] = useState(() => Date.now());
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const amount = Number(new FormData(event.currentTarget).get("amount"));
+    const form = new FormData(event.currentTarget);
+    const amount = Number(form.get("amount"));
     setState("loading");
     setMessage("");
     try {
@@ -23,6 +25,8 @@ export function DonationCheckout({ campaignId }: { campaignId: string }) {
         body: JSON.stringify({
           campaignId,
           amountCentavos: Math.round(amount * 100),
+          website: form.get("website"),
+          startedAt,
         }),
       });
       const payload = (await response.json()) as {
@@ -41,6 +45,10 @@ export function DonationCheckout({ campaignId }: { campaignId: string }) {
   }
   return (
     <form className="donation-panel" onSubmit={submit}>
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
       <span className="eyebrow">Secure contribution</span>
       <h2>Donate through PayMongo</h2>
       <p>

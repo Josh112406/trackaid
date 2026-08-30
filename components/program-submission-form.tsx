@@ -9,8 +9,6 @@ import {
   Send,
 } from "lucide-react";
 
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-
 const proofKinds = [
   ["public_website", "Official website"],
   ["social_post", "Social-media post"],
@@ -25,19 +23,12 @@ const proofKinds = [
   ["other", "Other evidence"],
 ] as const;
 
-async function sha256(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
-}
-
 export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
   const [state, setState] = useState<"idle" | "loading" | "ready" | "blocked">(
     "idle",
   );
   const [message, setMessage] = useState("");
+  const [startedAt, setStartedAt] = useState(() => Date.now());
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,137 +38,65 @@ export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
     const requestedIntent = submitter?.value;
     const intent = requestedIntent === "review" ? "review" : "draft";
     const form = new FormData(formElement);
-    const supabase = createBrowserSupabaseClient();
-
     setState("loading");
     setMessage("");
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (!userData.user) {
-      setState("blocked");
-      setMessage(
-        userError
-          ? "Your session could not be verified. Sign in again."
-          : mode === "admin"
-            ? "Sign in as an invited administrator before adding a program."
-            : "Sign in with your email before submitting a program.",
-      );
-      return;
-    }
-
-    const sourceUrl = String(form.get("sourceUrl") ?? "").trim();
-    const proofUrl = String(form.get("proofUrl") ?? "").trim();
-    let sourceDomain: string;
-    try {
-      sourceDomain = new URL(sourceUrl).hostname.toLowerCase();
-      new URL(proofUrl);
-    } catch {
-      setState("blocked");
-      setMessage("Enter complete HTTPS links for the official page and proof.");
-      return;
-    }
-
-    if (!sourceUrl.startsWith("https://") || !proofUrl.startsWith("https://")) {
-      setState("blocked");
-      setMessage("Official pages and proof links must use HTTPS.");
-      return;
-    }
-
-    const { data: submission, error } = await supabase
-      .from("program_submissions")
-      .insert({
-        submitted_by: userData.user.id,
-        organization_name: String(form.get("organizationName") ?? ""),
-        program_name: String(form.get("programName") ?? ""),
-        location: String(form.get("location") ?? ""),
-        public_source_url: sourceUrl,
-        official_domain: sourceDomain,
-        summary: String(form.get("summary") ?? ""),
-        status: "draft",
-      })
-      .select("id")
-      .single();
-
-    if (error || !submission) {
-      setState("blocked");
-      setMessage(error?.message ?? "The submission could not be saved.");
-      return;
-    }
-
-    const proofKind = String(
-      form.get("proofKind") ?? "public_website",
-    ) as (typeof proofKinds)[number][0];
-    const { error: proofError } = await supabase.from("program_proofs").insert({
-      submission_id: submission.id,
-      kind: proofKind,
-      label: String(form.get("proofLabel") ?? "Campaign evidence"),
-      public_url: proofUrl,
-      sha256: await sha256(proofUrl),
-      is_identity_proof: [
-        "registration",
-        "representative_authorization",
-        "payout_account",
-      ].includes(proofKind),
+    const response = await fetch("/api/programs/submit", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        organizationName: form.get("organizationName"),
+        programName: form.get("programName"),
+        location: form.get("location"),
+        sourceUrl: form.get("sourceUrl"),
+        summary: form.get("summary"),
+        proofKind: form.get("proofKind"),
+        proofLabel: form.get("proofLabel"),
+        proofUrl: form.get("proofUrl"),
+        organizationOwned: form.get("organizationOwned") === "on",
+        website: form.get("website"),
+        intent,
+        startedAt,
+      }),
     });
-
-    if (proofError) {
-      setState("blocked");
-      setMessage(
-        `The program draft was saved, but its proof needs attention: ${proofError.message}`,
-      );
-      return;
-    }
-
-    if (intent === "review") {
-      const now = new Date().toISOString();
-      const nextValues = {
-        status: "submitted" as const,
-        submitted_at: now,
-      };
-      const { data: reviewedSubmission, error: reviewError } = await supabase
-        .from("program_submissions")
-        .update(nextValues)
-        .eq("id", submission.id)
-        .eq("submitted_by", userData.user.id)
-        .eq("status", "draft")
-        .select("id")
-        .single();
-
-      if (reviewError || !reviewedSubmission) {
-        setState("blocked");
-        setMessage(
-          `The draft and proof were saved, but review submission failed: ${reviewError?.message ?? "no submission was updated"}`,
-        );
-        return;
-      }
-    }
-
-    setState("ready");
-    setMessage(
-      intent === "review"
-        ? "Program submitted for review with its proof attached."
-        : "Program and proof saved as a draft.",
-    );
+    const result = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
+    setState(response.ok ? "ready" : "blocked");
+    setMessage(result?.message ?? "The submission could not be saved.");
+    if (!response.ok) return;
     formElement.reset();
+    setStartedAt(Date.now());
   }
 
   return (
     <form className="program-submission-form" onSubmit={submit}>
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
       <fieldset>
         <legend>Program identity</legend>
         <div className="form-grid">
           <label>
             Organization name
-            <input name="organizationName" required minLength={2} />
+            <input
+              name="organizationName"
+              required
+              minLength={2}
+              maxLength={160}
+            />
           </label>
           <label>
             Program name
-            <input name="programName" required minLength={4} />
+            <input name="programName" required minLength={4} maxLength={180} />
           </label>
           <label>
             Philippine location
             <input
               name="location"
               required
+              minLength={2}
+              maxLength={240}
               placeholder="Province, city, or municipality"
             />
           </label>
@@ -187,13 +106,20 @@ export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
               name="sourceUrl"
               type="url"
               required
+              maxLength={2048}
               placeholder="https://organization.org/campaign"
             />
           </label>
         </div>
         <label>
           Public summary
-          <textarea name="summary" required minLength={20} rows={4} />
+          <textarea
+            name="summary"
+            required
+            minLength={20}
+            maxLength={2000}
+            rows={4}
+          />
         </label>
       </fieldset>
       <fieldset>
@@ -219,6 +145,7 @@ export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
             <input
               name="proofLabel"
               required
+              maxLength={180}
               placeholder="Official campaign announcement"
             />
           </label>
@@ -229,6 +156,7 @@ export function ProgramSubmissionForm({ mode }: { mode: "public" | "admin" }) {
             name="proofUrl"
             type="url"
             required
+            maxLength={2048}
             placeholder="https://..."
           />
         </label>

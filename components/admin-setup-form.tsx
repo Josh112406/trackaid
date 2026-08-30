@@ -5,6 +5,7 @@ import { CheckCircle2, KeyRound, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { strongPassword } from "@/lib/validation";
 
 export function AdminSetupForm({
   email,
@@ -32,8 +33,10 @@ export function AdminSetupForm({
       setMessage("This setup link is missing its one-time invitation.");
       return;
     }
-    if (password.length < 12) {
-      setMessage("Use at least 12 characters for your password.");
+    try {
+      strongPassword(password);
+    } catch (error) {
+      setMessage((error as Error).message);
       return;
     }
     if (password !== confirmation) {
@@ -94,7 +97,7 @@ export function AdminSetupForm({
           required
         />
         <small>
-          At least 12 characters. A password manager is recommended.
+          12–200 characters with lowercase, uppercase, a number, and a symbol.
         </small>
       </label>
       <label>

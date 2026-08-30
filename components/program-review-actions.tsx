@@ -7,7 +7,7 @@ import {
   LoaderCircle,
   ShieldCheck,
 } from "lucide-react";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { reviewProgram } from "@/app/admin/programs/actions";
 
 export function ProgramReviewActions({
   id,
@@ -33,28 +33,9 @@ export function ProgramReviewActions({
     }
     setBusy(next);
     setMessage("");
-    const supabase = createBrowserSupabaseClient();
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      setMessage("Your administrator session expired.");
-      setBusy(null);
-      return;
-    }
-    const values =
-      next === "approved" || next === "rejected"
-        ? {
-            status: next,
-            reviewed_by: user.user.id,
-            reviewed_at: new Date().toISOString(),
-          }
-        : { status: next, reviewed_by: null, reviewed_at: null };
-    const { error } = await supabase
-      .from("program_submissions")
-      .update(values)
-      .eq("id", id);
-    if (error) setMessage(error.message);
-    else {
-      setMessage(`Program marked ${next.replace("_", " ")}.`);
+    const result = await reviewProgram(id, next);
+    setMessage(result.message);
+    if (result.ok) {
       router.refresh();
     }
     setBusy(null);

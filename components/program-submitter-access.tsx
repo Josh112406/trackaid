@@ -9,6 +9,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 export function ProgramSubmitterSignIn() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [startedAt] = useState(() => Date.now());
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -16,23 +17,32 @@ export function ProgramSubmitterSignIn() {
     setMessage("");
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "").trim();
-    const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/submit-program`,
-      },
+    const response = await fetch("/api/auth/program-link", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email,
+        website: form.get("website"),
+        startedAt,
+      }),
     });
+    const result = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
     setMessage(
-      error
-        ? error.message
-        : "Check your email for a secure sign-in link, then return to submit your program.",
+      response.ok
+        ? "Check your email for a secure sign-in link, then return to submit your program."
+        : (result?.message ?? "The sign-in link could not be sent."),
     );
     setBusy(false);
   }
 
   return (
     <form className="program-access-card" onSubmit={submit}>
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
       <span className="program-access-icon" aria-hidden="true">
         <MailCheck size={24} />
       </span>
@@ -43,7 +53,13 @@ export function ProgramSubmitterSignIn() {
       </p>
       <label>
         Email address
-        <input name="email" type="email" autoComplete="email" required />
+        <input
+          name="email"
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          required
+        />
       </label>
       <button className="primary-button" type="submit" disabled={busy}>
         {busy ? (

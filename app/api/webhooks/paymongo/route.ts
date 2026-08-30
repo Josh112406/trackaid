@@ -10,8 +10,22 @@ import {
   processPayMongoEvent,
 } from "@/lib/webhook-processing";
 
+const MAX_WEBHOOK_BYTES = 1_000_000;
+
 export async function POST(request: Request) {
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json(
+      { error: "Payload is too large." },
+      { status: 413 },
+    );
+  }
   const rawBody = await request.text();
+  if (new TextEncoder().encode(rawBody).byteLength > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json(
+      { error: "Payload is too large." },
+      { status: 413 },
+    );
+  }
   const signature = request.headers.get("paymongo-signature");
   const webhookSecret = process.env.PAYMONGO_WEBHOOK_SECRET;
   const merchantSecretKey = process.env.PAYMONGO_SECRET_KEY;
