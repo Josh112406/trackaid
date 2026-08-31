@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Epilogue, Fraunces } from "next/font/google";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { Menu, ShieldCheck } from "lucide-react";
 
 import "./globals.css";
 
@@ -23,6 +23,15 @@ export const metadata: Metadata = {
     "Transparent disaster-relief donations, disbursements, evidence, and confirmations.",
 };
 
+const publicNavigation = [
+  ["/campaigns", "Campaigns"],
+  ["/official-sources", "Official sources"],
+  ["/public-audit", "Public audit"],
+  ["/how-it-works", "How it works"],
+  ["/organizations", "Organizations"],
+  ["/submit-program", "Submit a program"],
+] as const;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -39,14 +48,25 @@ export default function RootLayout({
             </span>
             TrackAid
           </Link>
-          <nav aria-label="Primary navigation">
-            <Link href="/campaigns">Campaigns</Link>
-            <Link href="/official-sources">Official sources</Link>
-            <Link href="/public-audit">Public audit</Link>
-            <Link href="/how-it-works">How it works</Link>
-            <Link href="/organizations">Organizations</Link>
-            <Link href="/submit-program">Submit a program</Link>
+          <nav className="desktop-navigation" aria-label="Primary navigation">
+            {publicNavigation.map(([href, label]) => (
+              <Link href={href} key={href}>
+                {label}
+              </Link>
+            ))}
           </nav>
+          <details className="mobile-navigation">
+            <summary>
+              <Menu size={18} aria-hidden="true" /> Menu
+            </summary>
+            <nav aria-label="Mobile navigation">
+              {publicNavigation.map(([href, label]) => (
+                <Link href={href} key={href}>
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </details>
         </header>
         {children}
         <footer className="site-footer">
