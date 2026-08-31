@@ -44,11 +44,7 @@ export function ProgramReviewActions({
     <div className="review-actions">
       <button
         className="primary-button"
-        disabled={
-          !!busy ||
-          status === "approved" ||
-          (isOwnSubmission && !canApproveOwnSubmission)
-        }
+        disabled={!!busy || (isOwnSubmission && !canApproveOwnSubmission)}
         onClick={() => update("approved")}
         type="button"
       >
@@ -57,11 +53,11 @@ export function ProgramReviewActions({
         ) : (
           <CheckCircle2 size={17} />
         )}
-        Approve
+        {status === "approved" ? "Publish on website" : "Approve and publish"}
       </button>
       <button
         className="secondary-button"
-        disabled={!!busy}
+        disabled={!!busy || status === "approved"}
         onClick={() => update("needs_information")}
         type="button"
       >
@@ -70,7 +66,7 @@ export function ProgramReviewActions({
       </button>
       <button
         className="text-button danger-button"
-        disabled={!!busy || isOwnSubmission}
+        disabled={!!busy || status === "approved" || isOwnSubmission}
         onClick={() => update("rejected")}
         type="button"
       >
