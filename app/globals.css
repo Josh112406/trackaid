@@ -1145,8 +1145,6 @@ h3 {
 }
 
 .donation-panel {
-  position: sticky;
-  top: 20px;
   border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
   background: var(--oat);
 }
