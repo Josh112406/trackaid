@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 
 import { formatDateTime, formatPhp } from "@/lib/format";
+import { ledgerTransactionUrl } from "@/lib/ledger-record";
 import type { AuditEvent } from "@/lib/types";
 
 const iconByType = {
@@ -28,6 +29,9 @@ export function AuditTimeline({ events }: { events: AuditEvent[] }) {
     <ol className="audit-timeline">
       {events.map((event) => {
         const Icon = iconByType[event.type];
+        const ledgerUrl = event.ledgerTxHash
+          ? ledgerTransactionUrl(event.ledgerTxHash)
+          : null;
         return (
           <li key={event.id}>
             <div className="thread-marker" aria-hidden="true">
@@ -56,13 +60,13 @@ export function AuditTimeline({ events }: { events: AuditEvent[] }) {
                   <dt>Recorded</dt>
                   <dd>{formatDateTime(event.occurredAt)}</dd>
                 </div>
-                {event.ledgerTxHash ? (
+                {event.ledgerTxHash && ledgerUrl ? (
                   <div>
                     <dt>Ledger transaction</dt>
                     <dd>
                       <a
                         className="hash-link"
-                        href={`https://amoy.polygonscan.com/tx/${event.ledgerTxHash}`}
+                        href={ledgerUrl}
                         rel="noopener noreferrer"
                         target="_blank"
                         title={event.ledgerTxHash}
@@ -70,7 +74,7 @@ export function AuditTimeline({ events }: { events: AuditEvent[] }) {
                         {shortHash(event.ledgerTxHash)}
                         <ArrowUpRight size={14} aria-hidden="true" />
                         <span className="sr-only">
-                          Open Polygon Amoy transaction
+                          Open public ledger transaction
                         </span>
                       </a>
                     </dd>

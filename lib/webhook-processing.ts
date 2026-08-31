@@ -323,7 +323,7 @@ export async function processPayMongoEvent(
       entity_id: paid.donationId,
       title: "Donation recorded",
       public_detail:
-        "A signed PayMongo payment was reconciled and queued for its exact peso-denominated Polygon audit record.",
+        "A signed PayMongo payment was reconciled and queued for a matching PHP-denominated Solana audit record. The donation remains off-chain.",
       amount_centavos: paid.amountCentavos,
       status: "pending",
       occurred_at: paid.paidAt,

@@ -1,6 +1,6 @@
 # TrackAid
 
-TrackAid is a public accountability platform for Philippine disaster-relief fundraising. It connects verified campaigns, PayMongo-hosted payments, evidence review, public reconciliation, and an append-only Polygon audit trail.
+TrackAid is a public accountability platform for Philippine disaster-relief fundraising. It connects verified campaigns, PayMongo-hosted payments, evidence review, public reconciliation, and signed Solana ledger records.
 
 **Production:** [trackaid.vercel.app](https://trackaid.vercel.app)
 
@@ -9,15 +9,15 @@ TrackAid is a public accountability platform for Philippine disaster-relief fund
 ## What TrackAid does
 
 - Lets organizations and community members submit fundraising programs with public proof.
-- Requires organization verification before a campaign can accept on-platform donations.
-- Sends donors to PayMongo's hosted checkout, so TrackAid never receives card or wallet credentials.
-- Reconciles each confirmed donation into gross amount, PayMongo fee, and net recipient amount.
-- Supports PayMongo Split Payments for independently approved organization merchant accounts.
-- Publishes campaign totals, disbursements, evidence fingerprints, and transaction links.
-- Anchors exact PHP centavo amounts and SHA-256 fingerprints on Polygon Amoy.
+- Requires organization verification before a campaign can accept donations.
+- Sends donors to PayMongo Checkout, so TrackAid never receives card or wallet credentials.
+- Reconciles every confirmed donation into gross PHP amount, PayMongo fee, and net recipient amount.
+- Supports PayMongo Split Payments for approved organization merchant accounts.
+- Publishes campaign totals, disbursements, evidence fingerprints, and public ledger links.
+- Writes exact PHP-centavo accounting records and SHA-256 fingerprints to Solana Devnet.
 - Provides authenticated administration, analytics, CSV reports, audit logs, and payout routing.
 
-TrackAid does **not** convert donations to cryptocurrency. Fiat remains in Philippine pesos. The smart contract is an integrity ledger only; it cannot receive, hold, or transfer funds.
+TrackAid does **not** create a token or convert PHP to cryptocurrency. One peso paid remains one peso in the PayMongo settlement flow. The Solana memo is a signed accounting representation only; it cannot receive, hold, or transfer the donation.
 
 ## System flow
 
@@ -25,23 +25,23 @@ TrackAid does **not** convert donations to cryptocurrency. Fiat remains in Phili
 Program submission
         │
         ▼
-Independent review ──► Organization and payout verification
+Evidence and organization review ──► payout verification
         │
         ▼
 Published campaign
         │
         ▼
-PayMongo hosted checkout ──► PHP settlement to approved recipient
+PayMongo Checkout ──► PHP settlement to approved recipient
         │
         ▼
 Signed webhook reconciliation
         │
         ├──► Supabase: gross, fee, net, audit entry, analytics
         │
-        └──► Polygon Amoy: record ID, centavo amount, payload hash
+        └──► Solana Devnet: record ID, PHP centavos, SHA-256 fingerprint
 ```
 
-The browser redirect is not treated as payment proof. A donation becomes paid only after the server verifies a PayMongo event and matches it to the pending checkout.
+The browser redirect is never treated as payment proof. A donation becomes paid only after the server verifies a PayMongo event and matches its campaign, checkout, donation, environment, and amount.
 
 ## Technology
 
@@ -50,35 +50,27 @@ The browser redirect is not treated as payment proof. A donation becomes paid on
 | Web application                   | Next.js 16 App Router, React 19, TypeScript          |
 | Database, authentication, storage | Supabase Postgres, Auth, Storage, Row Level Security |
 | Payments                          | PayMongo Checkout API v2 and signed webhooks         |
-| Audit ledger                      | Solidity 0.8.36, Polygon Amoy, viem                  |
+| Public integrity ledger           | Solana Kit and the public Memo program on Devnet     |
 | Hosting                           | Vercel                                               |
 | Tests                             | Vitest and Playwright                                |
 
 ## Project structure
 
 ```text
-app/                         Next.js pages, admin views, and API routes
-components/                  Shared public and administrative UI
-contracts/TrackAidLedger.sol Append-only audit smart contract
-lib/                         Payments, reconciliation, Supabase, CSV, and ledger logic
-scripts/                     Contract compilation and browser verification
-supabase/migrations/         Database schema, policies, triggers, and security controls
-supabase/functions/          Official-source monitoring function
-vercel.json                  Scheduled ledger processing
+app/                  Next.js pages, admin views, and route handlers
+components/           Shared public and administrative UI
+lib/                  Payments, reconciliation, Supabase, CSV, and ledger logic
+scripts/              Browser and operational verification
+supabase/migrations/  Database schema, policies, triggers, and security controls
+supabase/functions/   Official-source monitoring function
+vercel.json           Scheduled ledger processing
 ```
-
-## Prerequisites
-
-- Node.js 22 or newer
-- pnpm 11
-- A Supabase project
-- A PayMongo account with test API keys
-- A Polygon Amoy RPC endpoint and funded recorder wallet for on-chain anchoring
-- A Vercel project for production deployment
 
 ## Local setup
 
-1. Clone and install dependencies.
+Requirements: Node.js 22+, pnpm 11, Supabase, PayMongo, and Vercel projects.
+
+1. Install dependencies.
 
    ```bash
    git clone https://github.com/Josh112406/trackaid.git
@@ -95,13 +87,13 @@ vercel.json                  Scheduled ledger processing
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
    SUPABASE_SECRET_KEY=YOUR_SERVER_SECRET_KEY
 
-   PAYMONGO_SECRET_KEY=YOUR_TEST_SECRET_KEY
-   PAYMONGO_WEBHOOK_SECRET=YOUR_TEST_WEBHOOK_SECRET
+   PAYMONGO_SECRET_KEY=YOUR_SECRET_KEY
+   PAYMONGO_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET
    PAYMONGO_LIVE_MODE=false
 
-   POLYGON_AMOY_RPC_URL=https://YOUR_AMOY_RPC_ENDPOINT
-   TRACKAID_LEDGER_ADDRESS=0xYOUR_DEPLOYED_CONTRACT
-   TRACKAID_RECORDER_PRIVATE_KEY=0xYOUR_RECORDER_PRIVATE_KEY
+   SOLANA_DEVNET_RPC_URL=https://api.devnet.solana.com
+   SOLANA_LEDGER_SIGNER_ADDRESS=YOUR_PUBLIC_SOLANA_ADDRESS
+   SOLANA_LEDGER_SECRET_KEY=YOUR_BASE64_64_BYTE_SECRET
 
    CRON_SECRET=USE_A_LONG_RANDOM_VALUE
    ```
@@ -114,177 +106,125 @@ vercel.json                  Scheduled ledger processing
    pnpm exec supabase db push
    ```
 
-4. Start the application.
+4. Run the app.
 
    ```bash
    pnpm dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000).
+## Environment variables
 
-### Environment variables
+| Variable                               | Scope        | Purpose                                    |
+| -------------------------------------- | ------------ | ------------------------------------------ |
+| `NEXT_PUBLIC_SITE_URL`                 | Public       | Stable origin used in PayMongo return URLs |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Public       | Supabase project API URL                   |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public       | Browser-safe key protected by RLS          |
+| `SUPABASE_SECRET_KEY`                  | Server only  | Trusted database administration            |
+| `PAYMONGO_SECRET_KEY`                  | Server only  | PayMongo API authentication                |
+| `PAYMONGO_WEBHOOK_SECRET`              | Server only  | Verifies the `Paymongo-Signature` header   |
+| `PAYMONGO_LIVE_MODE`                   | Server only  | Must match the configured PayMongo keys    |
+| `SOLANA_DEVNET_RPC_URL`                | Server only  | Solana Devnet JSON-RPC endpoint            |
+| `SOLANA_LEDGER_SIGNER_ADDRESS`         | Public value | Dedicated ledger recorder address          |
+| `SOLANA_LEDGER_SECRET_KEY`             | Server only  | Base64-encoded 64-byte signing key         |
+| `SECURITY_HASH_PEPPER`                 | Server only  | Optional dedicated rate-limit HMAC key     |
+| `CRON_SECRET`                          | Server only  | Authorizes the scheduled ledger worker     |
 
-| Variable                               | Required      | Purpose                                         |
-| -------------------------------------- | ------------- | ----------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                 | Production    | Stable origin used in PayMongo return URLs      |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Yes           | Supabase project API URL                        |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes           | Browser-safe Supabase key                       |
-| `SUPABASE_SECRET_KEY`                  | Yes           | Server-only database administration key         |
-| `PAYMONGO_SECRET_KEY`                  | For payments  | Server-only PayMongo test or live secret key    |
-| `PAYMONGO_WEBHOOK_SECRET`              | For payments  | Verifies the `Paymongo-Signature` header        |
-| `PAYMONGO_LIVE_MODE`                   | Yes           | `false` for test keys; `true` for live keys     |
-| `POLYGON_AMOY_RPC_URL`                 | For anchoring | Polygon Amoy JSON-RPC endpoint                  |
-| `TRACKAID_LEDGER_ADDRESS`              | For anchoring | Deployed `TrackAidLedger` contract address      |
-| `TRACKAID_RECORDER_PRIVATE_KEY`        | For anchoring | Server-only key authorized as contract recorder |
-| `TRACKAID_LEDGER_OWNER_ADDRESS`        | Optional      | Contract owner; defaults to the recorder wallet |
-| `TRACKAID_LEDGER_RECORDER_ADDRESS`     | Optional      | Recorder role; defaults to the recorder wallet  |
-| `SECURITY_HASH_PEPPER`                 | Optional      | Dedicated server-only rate-limit HMAC key       |
-| `CRON_SECRET`                          | Production    | Authorizes the scheduled ledger worker          |
-
-The Supabase Edge Function uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, which Supabase provides to deployed functions.
+Never prefix secrets with `NEXT_PUBLIC_`. The Supabase Edge Function uses the platform-provided `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## Supabase and authorization
 
-Database changes live in `supabase/migrations/` and should be applied in order. The schema includes:
+Migrations define verified organizations, campaigns, donations, disbursements, confirmations, program submissions, audit entries, administrator roles, PayMongo idempotency, payout destinations, and queued ledger jobs.
 
-- verified organizations and organization membership;
-- campaigns, donations, disbursements, confirmations, and audit entries;
-- public program submissions and private evidence references;
-- authenticated admin roles: `owner`, `reviewer`, and `auditor`;
-- PayMongo webhook idempotency and donation reconciliation;
-- independently approved organization payment destinations; and
-- queued Polygon ledger jobs with retries.
+Row Level Security is enabled on all exposed operational tables. Sensitive mutations use server-only data-access modules and recheck administrator authorization. Private evidence remains in access-controlled Storage; public pages receive only fingerprints and redacted context.
 
-Row Level Security is enabled on public operational tables. Sensitive server operations use the Supabase server secret and must never be moved into client components.
+Review controls include:
 
-### Review controls
+- reviewers cannot approve their own submission;
+- a sole owner override is allowed and permanently logged;
+- payout destinations require separation between submission and approval;
+- donations are blocked when no active organization payout destination exists; and
+- every approval and ledger confirmation enters the administrator audit log.
 
-- Reviewers cannot approve their own program. A sole owner may approve their own submission, and the audit log marks the decision as an owner override.
-- A payment destination must be submitted by one owner or reviewer and approved by another.
-- Live donations are blocked when the verified organization has no active payout destination.
-- Private evidence files stay in access-controlled Supabase Storage; only their fingerprints and redacted context are public.
+## PayMongo setup and payment verification
 
-## PayMongo setup
+1. Add the matching PayMongo secret key and environment flag.
+2. Create `https://YOUR_DOMAIN/api/webhooks/paymongo` in the PayMongo dashboard.
+3. Subscribe to `checkout_session.payment.paid`.
+4. Store the webhook signing secret in `PAYMONGO_WEBHOOK_SECRET`.
+5. Configure an approved PayMongo organization destination for direct settlement.
 
-1. In the PayMongo Dashboard, switch to **Test Mode**.
-2. Copy the test secret key into `PAYMONGO_SECRET_KEY`.
-3. Create a webhook endpoint:
+For development payment checks, use PayMongo's documented cards:
 
-   ```text
-   https://YOUR_DOMAIN/api/webhooks/paymongo
-   ```
+| Scenario           | Card number           | Result                       |
+| ------------------ | --------------------- | ---------------------------- |
+| Successful card    | `4343 4343 4343 4345` | Payment succeeds without 3DS |
+| 3D Secure          | `4120 0000 0000 0007` | Select **Authorize**         |
+| Insufficient funds | `5100 0000 0000 0198` | Payment is declined          |
 
-4. Subscribe it to `checkout_session.payment.paid`.
-5. Store the returned signing secret as `PAYMONGO_WEBHOOK_SECRET`.
-6. Keep `PAYMONGO_LIVE_MODE=false` while using test keys.
-
-The webhook handler verifies signatures, stores an idempotency record, checks the campaign, donation, checkout session, amount, and environment, then queues the exact centavo amount for Polygon anchoring.
-
-For direct recipient settlement, PayMongo must activate Split Payments and establish the merchant relationship. Add the organization's `org_...` merchant ID under **Admin → Payout routing** and have a different administrator approve it.
+Use any future expiry and any three-digit CVC. After PayMongo redirects back, verify the signed webhook result in the campaign audit trail, **Admin → Transactions**, and **Admin → Blockchain**.
 
 Official references:
 
 - [Hosted Checkout](https://docs.paymongo.com/docs/payment-channels-hosted-checkout)
-- [Payment testing](https://docs.paymongo.com/docs/payment-acceptance-testing)
-- [Webhook setup](https://docs.paymongo.com/docs/creating-a-webhook-endpoint)
+- [Payment acceptance testing](https://docs.paymongo.com/docs/payment-acceptance-testing)
+- [Webhooks](https://docs.paymongo.com/docs/creating-a-webhook-endpoint)
 - [Split Payments](https://docs.paymongo.com/docs/seeds-payment-splitting)
 
-### Test payment
+## Solana integrity ledger
 
-A verified, published campaign is required before the donation form appears.
+TrackAid uses Solana's public Memo program rather than a custom token or value-transfer contract. Each successful record contains:
 
-1. Open the campaign and enter at least PHP 100.
-2. Continue to PayMongo Checkout.
-3. Use a PayMongo test card:
+- protocol and version identifiers;
+- record type and UUID;
+- campaign or submission UUID;
+- exact PHP amount in integer centavos;
+- currency `PHP` and `funds: offchain`; and
+- the SHA-256 payload fingerprint.
 
-   | Scenario           | Card number           | Result                       |
-   | ------------------ | --------------------- | ---------------------------- |
-   | Successful card    | `4343 4343 4343 4345` | Payment succeeds without 3DS |
-   | 3D Secure          | `4120 0000 0000 0007` | Select **Authorize**         |
-   | Insufficient funds | `5100 0000 0000 0198` | Payment is declined          |
+The dedicated recorder is included as a required memo signer, so the public transaction proves which TrackAid key submitted it. The memo contains no donor name, bank data, PayMongo secret, receipt, or private evidence. TrackAid pays the small Devnet transaction fee; donors need no wallet and no SOL.
 
-4. Use any future expiry and any three-digit CVC.
-5. After the redirect, verify the entry in the campaign audit trail, **Admin → Transactions**, and **Admin → Blockchain**.
-
-Test keys do not move real money. Do not scan or pay a test QR Ph code; use PayMongo's test controls.
-
-## Blockchain audit layer
-
-`TrackAidLedger.sol` is an append-only EVM contract. It records:
-
-- a deterministic record identifier;
-- a campaign identifier hash;
-- record kind;
-- exact PHP amount in centavos;
-- payload fingerprint;
-- recorder address; and
-- block timestamp.
-
-It rejects duplicate record IDs and uses two-step owner and recorder transfers. It stores no names, bank details, receipts, card data, or funds.
-
-Compile the contract with:
-
-```bash
-pnpm contract:compile
-```
-
-The artifact is written to `artifacts/TrackAidLedger.json` and is intentionally ignored by Git. Fund the recorder with Amoy POL, keep its private key server-only, then deploy with:
-
-```bash
-pnpm contract:deploy:amoy
-```
-
-The deployment script refuses non-Amoy RPC endpoints, verifies the recorder balance, waits for a successful receipt, and prints only the public transaction, contract, owner, and recorder addresses. Configure the returned `TRACKAID_LEDGER_ADDRESS` in Vercel before enabling the ledger worker.
+`ledger_jobs` stores signed transaction signatures before submission and checks previous signatures before retrying. Existing historical EVM transaction hashes remain valid and continue to open in their original explorer, while new entries open in Solana Explorer.
 
 ## Commands
 
-| Command                     | Purpose                           |
-| --------------------------- | --------------------------------- |
-| `pnpm dev`                  | Start the development server      |
-| `pnpm build`                | Create a production build         |
-| `pnpm start`                | Run the production build          |
-| `pnpm typecheck`            | Check TypeScript                  |
-| `pnpm lint`                 | Run ESLint                        |
-| `pnpm test`                 | Run the Vitest suite              |
-| `pnpm format:check`         | Check formatting                  |
-| `pnpm contract:compile`     | Compile `TrackAidLedger.sol`      |
-| `pnpm contract:deploy:amoy` | Deploy the ledger to Polygon Amoy |
-
-The browser verification script expects a development server on port `3100`:
-
-```bash
-pnpm run dev -p 3100
-python scripts/verify-webapp.py
-```
+| Command             | Purpose                   |
+| ------------------- | ------------------------- |
+| `pnpm dev`          | Start the development app |
+| `pnpm build`        | Create a production build |
+| `pnpm start`        | Run the production build  |
+| `pnpm typecheck`    | Check TypeScript          |
+| `pnpm lint`         | Run ESLint                |
+| `pnpm test`         | Run Vitest                |
+| `pnpm format:check` | Check formatting          |
 
 ## Deployment
 
-The production project deploys from `main` to Vercel.
+Production deploys from `main` to Vercel.
 
-1. Add all required environment variables to Vercel Production.
-2. Set `NEXT_PUBLIC_SITE_URL=https://trackaid.vercel.app` or the chosen stable domain.
-3. Apply Supabase migrations before deploying application code that depends on them.
-4. Deploy the same commit that passed tests and `pnpm build`.
-5. Confirm that unsigned or invalid webhooks are rejected and that the scheduled ledger endpoint requires `CRON_SECRET`.
+1. Apply Supabase migrations.
+2. Add production environment variables in Vercel; mark signer and provider keys as sensitive.
+3. Deploy the exact commit that passed lint, formatting, type checking, tests, and `pnpm build`.
+4. Verify PayMongo webhook rejection for invalid signatures and authorization on the scheduled ledger endpoint.
+5. Confirm the public recorder address and at least one signed ledger transaction in Solana Explorer.
 
-`vercel.json` runs the ledger worker daily. A successfully reconciled webhook also attempts to process one ledger job immediately.
+`vercel.json` runs the ledger worker daily. A reconciled PayMongo webhook also attempts one ledger job immediately.
 
 ## Security and privacy
 
-- Never commit `.env*`, Supabase server keys, PayMongo keys, webhook secrets, RPC credentials, or private keys.
+- Never commit `.env*`, provider keys, webhook secrets, RPC credentials, or signing keys.
 - Payment details are entered only on PayMongo's hosted page.
 - Webhook signatures and event IDs are verified before donation state changes.
-- Amounts are reconciled in integer centavos, not floating-point pesos.
-- Evidence files remain private; public records expose only redacted details and cryptographic fingerprints.
-- The blockchain is an integrity layer, not proof that an off-chain purchase or delivery was truthful. Independent evidence and confirmation remain necessary.
-- Run Supabase security and performance advisors after schema changes.
+- Amounts are reconciled as integer centavos, never floating-point pesos.
+- Evidence files remain private; public records expose only redacted details and fingerprints.
+- Blockchain records prove that a signed value and fingerprint were published, not that an off-chain purchase or delivery was truthful.
+- Run Supabase security/performance advisors and dependency audits after schema or package changes.
 
-Before accepting live donations, complete a security review, enable Supabase leaked-password protection, verify webhook delivery and retry behavior, audit the deployed contract, protect the recorder key with managed secrets, and complete PayMongo's activation and compliance requirements.
+Before accepting live donations, complete payment-provider activation and compliance, enable all available Supabase password protections, verify webhook retry behavior, protect the Solana key in managed secrets, and commission an independent security review.
 
 ## Development workflow
 
-- Keep changes focused and preserve existing user data.
-- Add or update tests for payment, reconciliation, authorization, and ledger behavior.
-- Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` before release.
+- Preserve existing user and payment data.
+- Add tests for payment, authorization, reconciliation, and ledger behavior.
+- Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` before release.
 - Use Conventional Commits such as `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, or `chore:`.
-- Never commit generated builds, dependency directories, local environments, or credentials.
+- Never commit generated builds, dependencies, local environments, or credentials.

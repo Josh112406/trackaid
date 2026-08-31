@@ -14,4 +14,3 @@ minimumReleaseAgeExclude:
   - "@supabase/cli-windows-x64@2.116.0"
   - "@types/node@26.4.0"
   - supabase@2.116.0
-  - viem@2.56.0

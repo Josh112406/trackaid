@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { loadEvidenceRecord } from "@/lib/campaigns";
+import { ledgerTransactionUrl } from "@/lib/ledger-record";
 
 const SHA256_PATTERN = /^0x[0-9a-f]{64}$/i;
 export default async function EvidenceRecordPage({
@@ -19,9 +20,7 @@ export default async function EvidenceRecordPage({
   const record = await loadEvidenceRecord(hash);
   if (!record) notFound();
   const tx = record.ledger_tx_hash;
-  const explorer = tx
-    ? `https://amoy.polygonscan.com/tx/${tx}`
-    : `https://amoy.polygonscan.com/search?f=0&q=${encodeURIComponent(hash)}`;
+  const explorer = tx ? ledgerTransactionUrl(tx) : null;
   const campaign = record.campaigns as unknown as {
     slug: string;
     title: string;
@@ -38,20 +37,26 @@ export default async function EvidenceRecordPage({
         <span className="section-label">Integrity record</span>
         <h1>Evidence hash</h1>
         <p>{record.public_detail}</p>
-        <a
-          className="evidence-hash-explorer"
-          href={explorer}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <code>{hash}</code>
-          <ArrowUpRight size={19} />
-        </a>
+        {explorer ? (
+          <a
+            className="evidence-hash-explorer"
+            href={explorer}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <code>{hash}</code>
+            <ArrowUpRight size={19} />
+          </a>
+        ) : (
+          <div className="evidence-hash-explorer">
+            <code>{hash}</code>
+          </div>
+        )}
         <div className="evidence-record-note">
           <ShieldCheck size={20} />
           <p>
             {tx
-              ? "Open PolygonScan to inspect the transaction that anchored this fingerprint."
+              ? "Open the public explorer to inspect the signed transaction that anchored this fingerprint."
               : "This fingerprint is recorded, but an on-chain transaction has not been confirmed yet."}
           </p>
         </div>

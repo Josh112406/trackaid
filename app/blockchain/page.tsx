@@ -1,51 +1,60 @@
 import { ArrowUpRight, Blocks, FileKey2, ShieldCheck } from "lucide-react";
+
+import { solanaAddressUrl } from "@/lib/ledger-record";
+
 export default function BlockchainPage() {
-  const address = process.env.TRACKAID_LEDGER_ADDRESS;
+  const address = process.env.SOLANA_LEDGER_SIGNER_ADDRESS;
   return (
     <main id="main-content" className="simple-page content-page">
       <span className="section-label">Blockchain audit layer</span>
-      <h1>Hashes on-chain. Donations in pesos.</h1>
+      <h1>PHP stays off-chain. Proof lands on Solana.</h1>
       <p className="page-lede">
-        The TrackAidLedger contract is an append-only EVM audit log. It never
-        receives funds, stores documents, or asks donors to hold cryptocurrency.
+        TrackAid writes a signed accounting memo for each reviewed event on
+        Solana Devnet. The memo mirrors the exact PHP centavo value but never
+        receives money, creates a token, or converts a donation to
+        cryptocurrency.
       </p>
       <div className="feature-grid">
         <article>
           <Blocks size={28} />
-          <h2>Append-only records</h2>
-          <p>Duplicate record identifiers are rejected by the contract.</p>
+          <h2>One peso record</h2>
+          <p>
+            One PHP remains one PHP. The ledger stores integer centavos beside a
+            record fingerprint for public reconciliation.
+          </p>
         </article>
         <article>
           <FileKey2 size={28} />
           <h2>Minimal disclosure</h2>
           <p>
-            Only identifiers, amounts in centavos, kinds, and payload hashes are
-            emitted.
+            Only record identifiers, amounts, and SHA-256 fingerprints are
+            published. Donor identity and private evidence stay protected.
           </p>
         </article>
         <article>
           <ShieldCheck size={28} />
-          <h2>Controlled recorder</h2>
+          <h2>TrackAid pays network fees</h2>
           <p>
-            Owner and recorder roles use two-step transfers to reduce mistakes.
+            A dedicated recorder signs each memo and pays the Devnet fee. A
+            donor never needs a wallet or SOL.
           </p>
         </article>
       </div>
       {address ? (
         <a
           className="primary-button"
-          href={`https://amoy.polygonscan.com/address/${address}`}
+          href={solanaAddressUrl(address)}
           target="_blank"
           rel="noopener noreferrer"
         >
-          Open contract on PolygonScan <ArrowUpRight size={17} />
+          Open public recorder on Solana Explorer
+          <ArrowUpRight size={17} />
         </a>
       ) : (
         <div className="empty-state compact-empty">
-          <h3>Contract deployment pending</h3>
+          <h3>Public recorder address unavailable</h3>
           <p>
-            The reviewed contract is ready, but no public address is configured
-            for this environment.
+            The public ledger address is not configured for this deployment.
           </p>
         </div>
       )}

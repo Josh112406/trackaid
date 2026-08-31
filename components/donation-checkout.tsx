@@ -54,8 +54,8 @@ export function DonationCheckout({ campaignId }: { campaignId: string }) {
       <p>
         Choose an amount, then complete payment on PayMongo’s secure checkout
         page. Live proceeds route to the independently approved organization
-        recipient; TrackAid records the exact PHP amount on Polygon without
-        converting it to cryptocurrency.
+        recipient; TrackAid publishes a matching PHP accounting record on Solana
+        without converting the donation to cryptocurrency.
       </p>
       <label>
         Amount in Philippine pesos

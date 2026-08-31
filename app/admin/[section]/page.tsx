@@ -11,6 +11,7 @@ import { AdminShell } from "@/components/admin-shell";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { loadAdminData } from "@/lib/admin-data";
 import { formatDateTime, formatPhp } from "@/lib/format";
+import { solanaAddressUrl } from "@/lib/ledger-record";
 
 const valid = [
   "programs",
@@ -332,7 +333,7 @@ function Evidence({
   );
 }
 function Blockchain({ jobs }: { jobs: Array<Record<string, unknown>> }) {
-  const address = process.env.TRACKAID_LEDGER_ADDRESS;
+  const address = process.env.SOLANA_LEDGER_SIGNER_ADDRESS;
   return (
     <>
       <div className="ledger-health">
@@ -342,7 +343,7 @@ function Blockchain({ jobs }: { jobs: Array<Record<string, unknown>> }) {
             <strong>{jobs.filter((r) => r.status === status).length}</strong>
             <small>
               {status === "confirmed"
-                ? "Anchors on Polygon"
+                ? "Signed Solana records"
                 : status === "pending"
                   ? "Waiting for the recorder"
                   : "Needs operator attention"}
@@ -355,9 +356,9 @@ function Blockchain({ jobs }: { jobs: Array<Record<string, unknown>> }) {
         <p>
           {address ? (
             <>
-              Contract{" "}
+              Public recorder{" "}
               <a
-                href={`https://amoy.polygonscan.com/address/${address}`}
+                href={solanaAddressUrl(address)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -365,7 +366,7 @@ function Blockchain({ jobs }: { jobs: Array<Record<string, unknown>> }) {
               </a>
             </>
           ) : (
-            "The audit contract is compiled but no deployment address is configured."
+            "The public Solana recorder address is not configured."
           )}
         </p>
       </div>
@@ -418,13 +419,13 @@ function Health({ data }: { data: Awaited<ReturnType<typeof loadAdminData>> }) {
     ],
     [
       "Ledger recorder",
-      process.env.TRACKAID_LEDGER_ADDRESS &&
-      process.env.TRACKAID_RECORDER_PRIVATE_KEY
+      process.env.SOLANA_LEDGER_SIGNER_ADDRESS &&
+      process.env.SOLANA_LEDGER_SECRET_KEY
         ? "Configured"
-        : "Not deployed",
+        : "Not configured",
       !!(
-        process.env.TRACKAID_LEDGER_ADDRESS &&
-        process.env.TRACKAID_RECORDER_PRIVATE_KEY
+        process.env.SOLANA_LEDGER_SIGNER_ADDRESS &&
+        process.env.SOLANA_LEDGER_SECRET_KEY
       ),
     ],
     [

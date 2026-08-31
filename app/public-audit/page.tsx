@@ -31,7 +31,7 @@ export default async function PublicAuditPage() {
       <h1>Read the money trail without exposing private records.</h1>
       <p className="page-lede">
         Gross donations, PayMongo fees, net recipient amounts, confirmed
-        disbursements, and Polygon transactions reconcile in public. Identity
+        disbursements, and signed Solana records reconcile in public. Identity
         documents, bank details, receipts, and donor information remain private.
       </p>
       <div className="evidence-kpi-grid">
@@ -74,8 +74,8 @@ export default async function PublicAuditPage() {
           <Blocks size={28} />
           <h2>Exact-value anchors</h2>
           <p>
-            Every confirmed donation queues one Polygon record containing the
-            exact PHP centavo amount.
+            Every confirmed donation queues one signed record containing the
+            exact PHP centavo amount, without moving the funds on-chain.
           </p>
         </article>
       </div>
