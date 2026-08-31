@@ -11,5 +11,7 @@ artifacts/
 cache/
 work/
 outputs/
+graphify-out/
+%SystemDrive%/
 *.tsbuildinfo
 supabase/.temp/
