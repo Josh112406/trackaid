@@ -58,16 +58,13 @@ describe("Solana ledger records", () => {
     ).toThrow("payload hash");
   });
 
-  it("links Solana signatures to Devnet and preserves legacy transaction links", () => {
+  it("links Solana signatures to Devnet and rejects unsupported formats", () => {
     const signature = "5".repeat(88);
     expect(isSolanaLedgerSignature(signature)).toBe(true);
     expect(ledgerTransactionUrl(signature)).toBe(
       `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
     );
 
-    const legacy = `0x${"12".repeat(32)}`;
-    expect(ledgerTransactionUrl(legacy)).toBe(
-      `https://amoy.polygonscan.com/tx/${legacy}`,
-    );
+    expect(ledgerTransactionUrl(`0x${"12".repeat(32)}`)).toBeNull();
   });
 });

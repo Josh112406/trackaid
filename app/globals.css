@@ -15,6 +15,7 @@
   --radius-md: 24px;
   --radius-lg: 32px;
   --max-width: 1180px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 * {
@@ -239,9 +240,10 @@ h3 {
   font-weight: 750;
   text-decoration: none;
   transition:
-    transform 320ms ease,
-    background 320ms ease,
-    color 320ms ease;
+    transform 160ms var(--ease-out),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
 }
 
 .primary-button {
@@ -254,13 +256,20 @@ h3 {
   color: var(--moss);
 }
 
-.primary-button:hover:not(:disabled),
-.secondary-button:hover:not(:disabled) {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .primary-button:hover:not(:disabled),
+  .secondary-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  .secondary-button:hover {
+    background: var(--leaf-pale);
+  }
 }
 
-.secondary-button:hover {
-  background: var(--leaf-pale);
+.primary-button:active:not(:disabled),
+.secondary-button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .primary-button:disabled,
@@ -1923,6 +1932,22 @@ body:has(.admin-shell) > .site-footer {
   font-size: 0.66rem;
 }
 
+.transaction-amount-cell {
+  min-width: 170px;
+}
+
+.transaction-amount-cell strong,
+.transaction-amount-cell span {
+  display: block;
+}
+
+.transaction-amount-cell span {
+  margin-top: 3px;
+  color: #6c7567;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
 .table-status {
   display: inline-block;
   padding: 4px 8px;
@@ -2838,6 +2863,81 @@ body:has(.admin-shell) > .site-footer {
   font-size: 1.5rem;
 }
 
+.solana-recorder-card {
+  margin-top: 28px;
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--sand) 72%, var(--leaf-pale));
+}
+
+.solana-recorder-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.solana-recorder-heading h2 {
+  margin: 18px 0 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.solana-network-label,
+.solana-recorder-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--moss);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.solana-recorder-state {
+  padding: 8px 11px;
+  border: 1px solid color-mix(in srgb, var(--moss) 28%, transparent);
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.solana-recorder-state > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--moss);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--moss) 14%, transparent);
+}
+
+.solana-address-block {
+  display: grid;
+  margin-top: 30px;
+  padding: 18px 20px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--sand) 84%, white);
+  gap: 7px;
+}
+
+.solana-address-block span {
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.solana-address-block code {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 0.86rem;
+}
+
+.simple-page .solana-explorer-link {
+  margin-top: 20px;
+}
+
 .empty-state {
   display: grid;
   min-height: 270px;
@@ -2985,6 +3085,11 @@ body:has(.admin-shell) > .site-footer {
   .proof-grid {
     grid-template-columns: 1fr;
   }
+
+  .solana-recorder-heading {
+    flex-direction: column;
+  }
+
   .campaign-hero {
     padding: 34px;
     grid-template-columns: 1fr;

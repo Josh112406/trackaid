@@ -240,7 +240,7 @@ function Transactions({
               </td>
               <td>{text((r.campaigns as { title?: string } | null)?.title)}</td>
               <td>{text(r.kind)}</td>
-              <td>
+              <td className="transaction-amount-cell">
                 <strong>{formatPhp(Number(r.amount_centavos ?? 0))}</strong>
                 {r.kind === "Donation" ? (
                   <span>

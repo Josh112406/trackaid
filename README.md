@@ -183,7 +183,7 @@ TrackAid uses Solana's public Memo program rather than a custom token or value-t
 
 The dedicated recorder is included as a required memo signer, so the public transaction proves which TrackAid key submitted it. The memo contains no donor name, bank data, PayMongo secret, receipt, or private evidence. TrackAid pays the small Devnet transaction fee; donors need no wallet and no SOL.
 
-`ledger_jobs` stores signed transaction signatures before submission and checks previous signatures before retrying. Existing historical EVM transaction hashes remain valid and continue to open in their original explorer, while new entries open in Solana Explorer.
+`ledger_jobs` stores signed Solana transaction signatures before submission and checks previous signatures before retrying. Both queued jobs and public audit entries accept Solana signatures only and open in Solana Explorer.
 
 ## Commands
 

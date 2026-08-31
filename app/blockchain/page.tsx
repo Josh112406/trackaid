@@ -1,4 +1,10 @@
-import { ArrowUpRight, Blocks, FileKey2, ShieldCheck } from "lucide-react";
+import {
+  ArrowUpRight,
+  Blocks,
+  FileKey2,
+  Radio,
+  ShieldCheck,
+} from "lucide-react";
 
 import { solanaAddressUrl } from "@/lib/ledger-record";
 
@@ -6,7 +12,7 @@ export default function BlockchainPage() {
   const address = process.env.SOLANA_LEDGER_SIGNER_ADDRESS;
   return (
     <main id="main-content" className="simple-page content-page">
-      <span className="section-label">Blockchain audit layer</span>
+      <span className="section-label">Solana audit layer</span>
       <h1>PHP stays off-chain. Proof lands on Solana.</h1>
       <p className="page-lede">
         TrackAid writes a signed accounting memo for each reviewed event on
@@ -41,15 +47,37 @@ export default function BlockchainPage() {
         </article>
       </div>
       {address ? (
-        <a
-          className="primary-button"
-          href={solanaAddressUrl(address)}
-          target="_blank"
-          rel="noopener noreferrer"
+        <section
+          className="solana-recorder-card"
+          aria-labelledby="recorder-title"
         >
-          Open public recorder on Solana Explorer
-          <ArrowUpRight size={17} />
-        </a>
+          <div className="solana-recorder-heading">
+            <div>
+              <span className="solana-network-label">
+                <Radio size={16} aria-hidden="true" />
+                Solana Devnet
+              </span>
+              <h2 id="recorder-title">Public ledger recorder</h2>
+            </div>
+            <span className="solana-recorder-state">
+              <span aria-hidden="true" />
+              Address configured
+            </span>
+          </div>
+          <div className="solana-address-block">
+            <span>Recorder address</span>
+            <code>{address}</code>
+          </div>
+          <a
+            className="primary-button solana-explorer-link"
+            href={solanaAddressUrl(address)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Solana Explorer
+            <ArrowUpRight size={17} aria-hidden="true" />
+          </a>
+        </section>
       ) : (
         <div className="empty-state compact-empty">
           <h3>Public recorder address unavailable</h3>

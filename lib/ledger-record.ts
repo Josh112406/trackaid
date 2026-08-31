@@ -1,6 +1,5 @@
 const PAYLOAD_HASH_PATTERN = /^0x[0-9a-f]{64}$/;
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/;
-const EVM_TRANSACTION_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 const MAX_MEMO_BYTES = 480;
 
 export type LedgerRecordInput = {
@@ -44,9 +43,6 @@ export function isSolanaLedgerSignature(value: string) {
 export function ledgerTransactionUrl(value: string) {
   if (isSolanaLedgerSignature(value)) {
     return `https://explorer.solana.com/tx/${value}?cluster=devnet`;
-  }
-  if (EVM_TRANSACTION_PATTERN.test(value)) {
-    return `https://amoy.polygonscan.com/tx/${value}`;
   }
   return null;
 }
