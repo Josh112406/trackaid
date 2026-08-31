@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, FileCheck2 } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
+import { CampaignPublicationForm } from "@/components/campaign-publication-form";
 import { ProgramReviewActions } from "@/components/program-review-actions";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { loadAdminData } from "@/lib/admin-data";
@@ -19,6 +20,9 @@ export default async function ProgramReviewPage({
   const program = data.submissions.find((r) => r.id === id);
   if (!program) notFound();
   const proofs = data.proofs.filter((r) => r.submission_id === id);
+  const linkedCampaign = program.campaign_id
+    ? data.campaigns.find((campaign) => campaign.id === program.campaign_id)
+    : undefined;
   return (
     <AdminShell email={access.email} role={access.role}>
       <header className="admin-topbar">
@@ -48,6 +52,17 @@ export default async function ProgramReviewPage({
           }
         />
       </header>
+      {String(program.status) === "approved" ? (
+        <section className="admin-section campaign-publication-section">
+          <CampaignPublicationForm
+            submissionId={id}
+            programName={String(program.program_name)}
+            campaignSlug={
+              linkedCampaign ? String(linkedCampaign.slug) : undefined
+            }
+          />
+        </section>
+      ) : null}
       <section className="admin-section">
         <div className="admin-section-heading">
           <div>

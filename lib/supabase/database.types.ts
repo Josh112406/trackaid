@@ -767,6 +767,7 @@ export type Database = {
       };
       program_submissions: {
         Row: {
+          campaign_id: string | null;
           created_at: string;
           id: string;
           location: string;
@@ -785,6 +786,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          campaign_id?: string | null;
           created_at?: string;
           id?: string;
           location: string;
@@ -803,6 +805,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          campaign_id?: string | null;
           created_at?: string;
           id?: string;
           location?: string;
@@ -820,7 +823,15 @@ export type Database = {
           summary?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "program_submissions_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: true;
+            referencedRelation: "campaigns";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       source_check_logs: {
         Row: {

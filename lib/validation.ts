@@ -91,6 +91,21 @@ export function uuid(value: unknown, name = "Record") {
   return value;
 }
 
+export function pesoAmountToCentavos(value: unknown, name = "Funding goal") {
+  if (typeof value !== "string" || !/^\d+(?:\.\d{1,2})?$/.test(value.trim())) {
+    throw new Error(`${name} must be a valid Philippine peso amount.`);
+  }
+  const [whole, decimal = ""] = value.trim().split(".");
+  const centavos = Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
+  if (!Number.isSafeInteger(centavos) || centavos < 10_000) {
+    throw new Error(`${name} must be at least PHP 100.`);
+  }
+  if (centavos > 1_000_000_000_00) {
+    throw new Error(`${name} is too large.`);
+  }
+  return centavos;
+}
+
 export function botSignals(value: { website?: unknown; startedAt?: unknown }) {
   if (typeof value.website === "string" && value.website.trim()) return false;
   const startedAt = Number(value.startedAt);

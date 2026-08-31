@@ -42,7 +42,7 @@ export async function loadAdminData(): Promise<AdminData> {
     supabase
       .from("program_submissions")
       .select(
-        "id,organization_name,program_name,status,official_domain,submitted_by,reviewed_by,created_at,submitted_at,reviewed_at",
+        "id,campaign_id,organization_name,program_name,location,summary,public_source_url,status,official_domain,submitted_by,reviewed_by,created_at,submitted_at,reviewed_at",
       )
       .order("created_at", { ascending: false })
       .limit(100),

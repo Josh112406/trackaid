@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 
 import { getAdminAccess } from "@/lib/admin-auth";
-import { approvedProgramSourceSlug } from "@/lib/program-publication";
+import {
+  approvedOrganizationSlug,
+  approvedProgramCampaignSlug,
+  approvedProgramSourceSlug,
+} from "@/lib/program-publication";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { uuid } from "@/lib/validation";
+import { pesoAmountToCentavos, plainText, uuid } from "@/lib/validation";
 
 type ReviewDecision = "approved" | "needs_information" | "rejected";
 
@@ -69,28 +73,7 @@ export async function reviewProgram(idValue: string, next: ReviewDecision) {
   };
 
   if (submission.status === "approved") {
-    if (next !== "approved") {
-      return { ok: false, message: "Approved programs cannot be re-reviewed." };
-    }
-    const publishError = await publishApprovedProgram(true);
-    if (publishError) {
-      return {
-        ok: false,
-        message: "The approved program could not be published.",
-      };
-    }
-    await admin.from("admin_audit_log").insert({
-      actor_user_id: access.userId,
-      action: "approved_program_published",
-      entity_type: "program_submission",
-      entity_id: id,
-      detail: {},
-    });
-    revalidatePath("/");
-    revalidatePath("/campaigns");
-    revalidatePath("/official-sources");
-    revalidatePath(`/admin/programs/${id}`);
-    return { ok: true, message: "Approved program published on the website." };
+    return { ok: false, message: "This program is already approved." };
   }
 
   const isOwnSubmission = submission.submitted_by === access.userId;
@@ -128,7 +111,7 @@ export async function reviewProgram(idValue: string, next: ReviewDecision) {
       return {
         ok: false,
         message:
-          "The program was approved but publication failed. Use Publish on website to retry.",
+          "The program was approved, but its official source could not be listed.",
       };
     }
     await admin.from("analytics_events").insert({
@@ -158,7 +141,214 @@ export async function reviewProgram(idValue: string, next: ReviewDecision) {
     ok: true,
     message:
       next === "approved"
-        ? "Program approved and published on the website."
+        ? "Program approved. Add its funding details to publish the campaign."
         : `Program marked ${next.replace("_", " ")}.`,
+  };
+}
+
+export async function publishProgramCampaign(input: {
+  submissionId: string;
+  disasterName: string;
+  targetBeneficiaries: string;
+  fundingGoalPesos: string;
+}) {
+  let submissionId: string;
+  let disasterName: string;
+  let targetBeneficiaries: string;
+  let fundingGoalCentavos: number;
+  try {
+    submissionId = uuid(input.submissionId, "Program");
+    disasterName = plainText(input.disasterName, {
+      min: 2,
+      max: 180,
+      name: "Cause or emergency name",
+    });
+    targetBeneficiaries = plainText(input.targetBeneficiaries, {
+      min: 2,
+      max: 500,
+      name: "Target beneficiaries",
+    });
+    fundingGoalCentavos = pesoAmountToCentavos(input.fundingGoalPesos);
+  } catch (error) {
+    return { ok: false, message: (error as Error).message };
+  }
+
+  const access = await getAdminAccess();
+  if (
+    access.mode !== "authenticated" ||
+    (access.role !== "owner" && access.role !== "reviewer")
+  ) {
+    return { ok: false, message: "Owner or reviewer access is required." };
+  }
+  const admin = createAdminClient();
+  if (!admin) {
+    return { ok: false, message: "Secure campaign storage is unavailable." };
+  }
+
+  const { data: submission, error: submissionError } = await admin
+    .from("program_submissions")
+    .select(
+      "id,campaign_id,status,submitted_by,organization_name,program_name,location,summary",
+    )
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (submissionError || !submission || submission.status !== "approved") {
+    return { ok: false, message: "Only an approved program can be published." };
+  }
+
+  if (submission.campaign_id) {
+    const { data: campaign } = await admin
+      .from("campaigns")
+      .select("slug")
+      .eq("id", submission.campaign_id)
+      .maybeSingle();
+    return campaign
+      ? {
+          ok: true,
+          message: "This campaign is already public.",
+          campaignSlug: campaign.slug,
+        }
+      : { ok: false, message: "The linked campaign could not be loaded." };
+  }
+
+  const now = new Date().toISOString();
+  let { data: organization, error: organizationError } = await admin
+    .from("organizations")
+    .select("id,status")
+    .eq("owner_user_id", submission.submitted_by)
+    .eq("name", submission.organization_name)
+    .maybeSingle();
+  if (organizationError) {
+    return { ok: false, message: "The organization could not be prepared." };
+  }
+  if (organization?.status === "suspended") {
+    return { ok: false, message: "This organization is suspended." };
+  }
+  if (!organization) {
+    const created = await admin
+      .from("organizations")
+      .insert({
+        owner_user_id: submission.submitted_by,
+        name: submission.organization_name,
+        slug: approvedOrganizationSlug(
+          submission.organization_name,
+          submission.submitted_by,
+        ),
+        description: submission.summary,
+        status: "verified",
+        verified_at: now,
+      })
+      .select("id,status")
+      .single();
+    organization = created.data;
+    organizationError = created.error;
+  } else if (organization.status !== "verified") {
+    const verified = await admin
+      .from("organizations")
+      .update({ status: "verified", verified_at: now })
+      .eq("id", organization.id)
+      .select("id,status")
+      .single();
+    organization = verified.data;
+    organizationError = verified.error;
+  }
+  if (organizationError || !organization) {
+    return { ok: false, message: "The organization could not be verified." };
+  }
+
+  const { error: membershipError } = await admin
+    .from("organization_members")
+    .upsert(
+      {
+        organization_id: organization.id,
+        user_id: submission.submitted_by,
+        role: "owner",
+      },
+      { onConflict: "organization_id,user_id" },
+    );
+  if (membershipError) {
+    return {
+      ok: false,
+      message: "Organization ownership could not be linked.",
+    };
+  }
+
+  const campaignSlug = approvedProgramCampaignSlug(
+    submission.program_name,
+    submission.id,
+  );
+  let { data: campaign, error: campaignError } = await admin
+    .from("campaigns")
+    .select("id,slug,organization_id")
+    .eq("slug", campaignSlug)
+    .maybeSingle();
+  if (campaignError) {
+    return { ok: false, message: "The campaign could not be prepared." };
+  }
+  if (campaign && campaign.organization_id !== organization.id) {
+    return { ok: false, message: "The campaign address is already in use." };
+  }
+  if (!campaign) {
+    const created = await admin
+      .from("campaigns")
+      .insert({
+        organization_id: organization.id,
+        slug: campaignSlug,
+        title: submission.program_name,
+        disaster_name: disasterName,
+        location: submission.location,
+        summary: submission.summary,
+        target_beneficiaries: targetBeneficiaries,
+        funding_goal_centavos: fundingGoalCentavos,
+        status: "published",
+        is_demonstration: false,
+        published_at: now,
+      })
+      .select("id,slug,organization_id")
+      .single();
+    campaign = created.data;
+    campaignError = created.error;
+  }
+  if (campaignError || !campaign) {
+    return { ok: false, message: "The public campaign could not be created." };
+  }
+
+  const { error: linkError } = await admin
+    .from("program_submissions")
+    .update({ campaign_id: campaign.id })
+    .eq("id", submission.id)
+    .eq("status", "approved");
+  if (linkError) {
+    return {
+      ok: false,
+      message: "The campaign was created but could not be linked.",
+    };
+  }
+
+  await admin.from("admin_audit_log").insert({
+    actor_user_id: access.userId,
+    action: "program_campaign_published",
+    entity_type: "campaign",
+    entity_id: campaign.id,
+    detail: { submission_id: submission.id },
+  });
+  await admin
+    .from("external_campaign_sources")
+    .update({ is_visible: false })
+    .eq(
+      "slug",
+      approvedProgramSourceSlug(submission.program_name, submission.id),
+    );
+  revalidatePath("/");
+  revalidatePath("/campaigns");
+  revalidatePath(`/campaigns/${campaign.slug}`);
+  revalidatePath("/public-audit");
+  revalidatePath("/organizations");
+  revalidatePath("/admin/programs");
+  revalidatePath(`/admin/programs/${submission.id}`);
+  return {
+    ok: true,
+    message: "Campaign published on the website.",
+    campaignSlug: campaign.slug,
   };
 }

@@ -3207,6 +3207,80 @@ body:has(.admin-shell) > .site-footer {
 .review-actions .form-message {
   flex-basis: 100%;
 }
+.campaign-publication-section {
+  padding-top: 0;
+}
+.campaign-publication-card {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+}
+.campaign-publication-card > div > h2,
+.campaign-publication-heading h2 {
+  margin: 8px 0;
+}
+.campaign-publication-card > div > p,
+.campaign-publication-heading p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--ink-muted);
+}
+.campaign-publication-card > div > a {
+  display: inline-flex;
+  margin-top: 20px;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+}
+.campaign-publication-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.campaign-publication-form {
+  display: grid;
+  gap: 14px;
+}
+.campaign-publication-form label {
+  display: grid;
+  gap: 7px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.campaign-publication-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  border-radius: 12px;
+  background: #fffaf1;
+  color: var(--ink);
+}
+.campaign-money-input {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  border-radius: 12px;
+  background: #fffaf1;
+  grid-template-columns: auto 1fr;
+}
+.campaign-money-input > span {
+  display: grid;
+  padding: 0 13px;
+  border-right: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  place-items: center;
+}
+.campaign-money-input input {
+  border: 0;
+  border-radius: 0;
+}
+.campaign-publication-form .primary-button {
+  justify-self: start;
+}
+.campaign-publication-form .form-message {
+  margin: 0;
+}
 .review-policy-note {
   display: flex;
   flex-basis: 100%;
@@ -3237,7 +3311,8 @@ body:has(.admin-shell) > .site-footer {
 
 @media (max-width: 900px) {
   .feature-grid,
-  .proof-grid {
+  .proof-grid,
+  .campaign-publication-card {
     grid-template-columns: 1fr;
   }
 

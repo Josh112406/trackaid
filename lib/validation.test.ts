@@ -4,6 +4,7 @@ import {
   botSignals,
   emailAddress,
   httpsUrl,
+  pesoAmountToCentavos,
   plainText,
   secretText,
   strongPassword,
@@ -53,5 +54,12 @@ describe("security input validation", () => {
     expect(
       botSignals({ website: "filled", startedAt: Date.now() - 2000 }),
     ).toBe(false);
+  });
+
+  it("converts exact peso amounts without floating-point rounding", () => {
+    expect(pesoAmountToCentavos("2500000")).toBe(250_000_000);
+    expect(pesoAmountToCentavos("100.50")).toBe(10_050);
+    expect(() => pesoAmountToCentavos("99.99")).toThrow();
+    expect(() => pesoAmountToCentavos("1e6")).toThrow();
   });
 });

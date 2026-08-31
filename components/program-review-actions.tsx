@@ -24,6 +24,7 @@ export function ProgramReviewActions({
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const usesOwnerOverride = isOwnSubmission && canApproveOwnSubmission;
+  if (status === "approved") return null;
   async function update(next: "approved" | "needs_information" | "rejected") {
     if (isOwnSubmission && next === "approved" && !canApproveOwnSubmission) {
       setMessage(
@@ -53,7 +54,7 @@ export function ProgramReviewActions({
         ) : (
           <CheckCircle2 size={17} />
         )}
-        {status === "approved" ? "Publish on website" : "Approve and publish"}
+        Approve program
       </button>
       <button
         className="secondary-button"
