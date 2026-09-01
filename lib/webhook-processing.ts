@@ -48,16 +48,20 @@ function isoTime(value: unknown) {
 
 export function getPayMongoEventType(payload: JsonObject) {
   const event = asObject(payload.data);
-  const directType = stringValue(event.type);
-  if (directType) return directType;
-  return stringValue(asObject(event.attributes).type) ?? "unknown";
+  const eventType = stringValue(asObject(event.attributes).type);
+  if (eventType) return eventType;
+  return stringValue(event.type) ?? "unknown";
 }
 
 function normalizeCheckoutPaidEvent(
   payload: JsonObject,
 ): PaidDonationEvent | null {
   const event = asObject(payload.data);
-  const session = asObject(event.data);
+  const eventAttributes = asObject(event.attributes);
+  const nestedSession = asObject(eventAttributes.data);
+  const session = Object.keys(nestedSession).length
+    ? nestedSession
+    : asObject(event.data);
   const sessionAttributes = asObject(session.attributes);
   const metadata = asObject(sessionAttributes.metadata);
   const payment = asArray(sessionAttributes.payments)
@@ -113,12 +117,39 @@ function normalizeCheckoutPaidEvent(
       stringValue(source.type) ??
       stringValue(paymentAttributes.payment_method_type),
     livemode:
-      typeof event.livemode === "boolean"
-        ? event.livemode
-        : typeof sessionAttributes.livemode === "boolean"
-          ? sessionAttributes.livemode
-          : null,
-    paidAt: isoTime(paymentAttributes.paid_at ?? event.updated_at),
+      typeof eventAttributes.livemode === "boolean"
+        ? eventAttributes.livemode
+        : typeof event.livemode === "boolean"
+          ? event.livemode
+          : typeof sessionAttributes.livemode === "boolean"
+            ? sessionAttributes.livemode
+            : null,
+    paidAt: isoTime(
+      paymentAttributes.paid_at ??
+        eventAttributes.updated_at ??
+        sessionAttributes.updated_at ??
+        event.updated_at,
+    ),
+  };
+}
+
+export function checkoutSessionPaidEventPayload(
+  session: JsonObject,
+  eventId: string,
+) {
+  const attributes = asObject(session.attributes);
+  return {
+    data: {
+      id: eventId,
+      type: "event",
+      attributes: {
+        type: "checkout_session.payment.paid",
+        livemode:
+          typeof attributes.livemode === "boolean" ? attributes.livemode : null,
+        created_at: attributes.updated_at ?? attributes.created_at,
+        data: session,
+      },
+    },
   };
 }
 

@@ -7,32 +7,36 @@ import {
 
 const checkoutPaid = {
   data: {
-    type: "checkout_session.payment.paid",
-    livemode: false,
-    updated_at: "2026-08-29T08:00:00Z",
-    data: {
-      id: "cs_test_123",
-      attributes: {
-        reference_number: "00000000-0000-4000-8000-000000000001",
-        metadata: {
-          campaign_id: "00000000-0000-4000-8000-000000000002",
-          donation_id: "00000000-0000-4000-8000-000000000001",
-          amount_centavos: "50000",
-        },
-        payment_intent: { id: "pi_test_123" },
-        payments: [
-          {
-            id: "pay_test_123",
-            attributes: {
-              amount: 50000,
-              fee: 1250,
-              net_amount: 48750,
-              status: "paid",
-              paid_at: 1787990400,
-              source: { type: "card" },
-            },
+    id: "evt_test_123",
+    type: "event",
+    attributes: {
+      type: "checkout_session.payment.paid",
+      livemode: false,
+      updated_at: "2026-08-29T08:00:00Z",
+      data: {
+        id: "cs_test_123",
+        attributes: {
+          reference_number: "00000000-0000-4000-8000-000000000001",
+          metadata: {
+            campaign_id: "00000000-0000-4000-8000-000000000002",
+            donation_id: "00000000-0000-4000-8000-000000000001",
+            amount_centavos: "50000",
           },
-        ],
+          payment_intent: { id: "pi_test_123" },
+          payments: [
+            {
+              id: "pay_test_123",
+              attributes: {
+                amount: 50000,
+                fee: 1250,
+                net_amount: 48750,
+                status: "paid",
+                paid_at: 1787990400,
+                source: { type: "card" },
+              },
+            },
+          ],
+        },
       },
     },
   },
@@ -57,7 +61,7 @@ describe("PayMongo paid-event normalization", () => {
 
   it("rejects a signed payload whose charged amount differs from checkout metadata", () => {
     const changed = structuredClone(checkoutPaid);
-    changed.data.data.attributes.payments[0].attributes.amount = 60000;
+    changed.data.attributes.data.attributes.payments[0].attributes.amount = 60000;
     expect(normalizePaidDonationEvent(changed)).toBeNull();
   });
 

@@ -1732,6 +1732,19 @@ body:has(.admin-shell) > .site-footer {
   font-size: 0.75rem;
 }
 
+.admin-inline-action {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.admin-inline-action > span {
+  max-width: 320px;
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  text-align: right;
+}
+
 .admin-section {
   padding: 34px 0;
   border-top: 1px solid rgb(47 58 43 / 14%);

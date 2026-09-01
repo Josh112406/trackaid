@@ -5,26 +5,76 @@ import {
   CheckCircle2,
   CircleAlert,
   LoaderCircle,
+  RotateCcw,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
-import { reviewProgram } from "@/app/admin/programs/actions";
+import {
+  reviewProgram,
+  setProgramVisibility,
+} from "@/app/admin/programs/actions";
 
 export function ProgramReviewActions({
   id,
   status,
   isOwnSubmission,
   canApproveOwnSubmission,
+  isPublic,
 }: {
   id: string;
   status: string;
   isOwnSubmission: boolean;
   canApproveOwnSubmission: boolean;
+  isPublic: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const usesOwnerOverride = isOwnSubmission && canApproveOwnSubmission;
-  if (status === "approved") return null;
+  async function changeVisibility(visible: boolean) {
+    if (
+      !visible &&
+      !window.confirm(
+        "Remove this program from the public website? Financial and audit records will be preserved.",
+      )
+    ) {
+      return;
+    }
+    setBusy(visible ? "restore" : "remove");
+    setMessage("");
+    const result = await setProgramVisibility(id, visible);
+    setMessage(result.message);
+    if (result.ok) router.refresh();
+    setBusy(null);
+  }
+  if (status === "approved") {
+    return (
+      <div className="review-actions">
+        <button
+          className={
+            isPublic ? "secondary-button danger-button" : "secondary-button"
+          }
+          disabled={!!busy}
+          onClick={() => changeVisibility(!isPublic)}
+          type="button"
+        >
+          {busy ? (
+            <LoaderCircle className="spin" size={17} />
+          ) : isPublic ? (
+            <Trash2 size={17} />
+          ) : (
+            <RotateCcw size={17} />
+          )}
+          {isPublic ? "Remove from website" : "Restore to website"}
+        </button>
+        {message ? (
+          <p className="form-message form-message-neutral" role="status">
+            {message}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
   async function update(next: "approved" | "needs_information" | "rejected") {
     if (isOwnSubmission && next === "approved" && !canApproveOwnSubmission) {
       setMessage(

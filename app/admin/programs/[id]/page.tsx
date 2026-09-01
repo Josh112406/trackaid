@@ -23,6 +23,12 @@ export default async function ProgramReviewPage({
   const linkedCampaign = program.campaign_id
     ? data.campaigns.find((campaign) => campaign.id === program.campaign_id)
     : undefined;
+  const linkedSource = data.sources.find(
+    (source) => source.official_source_url === program.public_source_url,
+  );
+  const isPublic = linkedCampaign
+    ? ["published", "closed"].includes(String(linkedCampaign.status))
+    : Boolean(linkedSource?.is_visible);
   return (
     <AdminShell email={access.email} role={access.role}>
       <header className="admin-topbar">
@@ -50,6 +56,7 @@ export default async function ProgramReviewPage({
           canApproveOwnSubmission={
             access.mode === "authenticated" && access.role === "owner"
           }
+          isPublic={isPublic}
         />
       </header>
       {String(program.status) === "approved" ? (
@@ -59,6 +66,9 @@ export default async function ProgramReviewPage({
             programName={String(program.program_name)}
             campaignSlug={
               linkedCampaign ? String(linkedCampaign.slug) : undefined
+            }
+            campaignStatus={
+              linkedCampaign ? String(linkedCampaign.status) : undefined
             }
           />
         </section>

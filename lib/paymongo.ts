@@ -13,7 +13,46 @@ type CheckoutSessionResponse = {
   errors?: Array<{ detail?: string }>;
 };
 
+type CheckoutSessionDetailResponse = {
+  data?: Record<string, unknown>;
+  errors?: Array<{ detail?: string }>;
+};
+
 export class PayMongoConfigurationError extends Error {}
+
+function payMongoAuthorization(secretKey: string) {
+  return `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`;
+}
+
+export async function retrievePayMongoCheckoutSession(sessionId: string) {
+  const secretKey = process.env.PAYMONGO_SECRET_KEY;
+  if (!secretKey)
+    throw new PayMongoConfigurationError(
+      "PayMongo checkout is not configured.",
+    );
+  if (!/^cs_[A-Za-z0-9]+$/.test(sessionId))
+    throw new Error("Invalid PayMongo checkout reference.");
+
+  const response = await fetch(
+    `https://api.paymongo.com/v1/checkout_sessions/${encodeURIComponent(sessionId)}`,
+    {
+      headers: {
+        accept: "application/json",
+        authorization: payMongoAuthorization(secretKey),
+      },
+      cache: "no-store",
+    },
+  );
+  const payload = (await response.json()) as CheckoutSessionDetailResponse;
+  if (!response.ok || !payload.data)
+    throw new Error(
+      payload.errors?.[0]?.detail ??
+        "PayMongo checkout could not be retrieved.",
+    );
+  if (payload.data.id !== sessionId)
+    throw new Error("PayMongo returned a different checkout reference.");
+  return payload.data;
+}
 
 export async function createPayMongoCheckoutSession(input: {
   campaignId: string;
@@ -70,7 +109,7 @@ export async function createPayMongoCheckoutSession(input: {
       method: "POST",
       headers: {
         accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
+        authorization: payMongoAuthorization(secretKey),
         "content-type": "application/json",
         "idempotency-key": idempotencyKey,
       },

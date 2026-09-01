@@ -352,3 +352,87 @@ export async function publishProgramCampaign(input: {
     campaignSlug: campaign.slug,
   };
 }
+
+export async function setProgramVisibility(idValue: string, visible: boolean) {
+  if (typeof visible !== "boolean") {
+    return { ok: false, message: "Invalid visibility change." };
+  }
+  let id: string;
+  try {
+    id = uuid(idValue, "Program");
+  } catch (error) {
+    return { ok: false, message: (error as Error).message };
+  }
+  const access = await getAdminAccess();
+  if (
+    access.mode !== "authenticated" ||
+    (access.role !== "owner" && access.role !== "reviewer")
+  ) {
+    return { ok: false, message: "Owner or reviewer access is required." };
+  }
+  const admin = createAdminClient();
+  if (!admin)
+    return { ok: false, message: "Secure campaign storage is unavailable." };
+
+  const { data: submission, error: submissionError } = await admin
+    .from("program_submissions")
+    .select("id,campaign_id,status,public_source_url")
+    .eq("id", id)
+    .maybeSingle();
+  if (submissionError || !submission || submission.status !== "approved") {
+    return { ok: false, message: "Only an approved program can be changed." };
+  }
+
+  let campaignSlug: string | null = null;
+  if (submission.campaign_id) {
+    const { data: campaign, error: campaignError } = await admin
+      .from("campaigns")
+      .update({
+        status: visible ? "published" : "draft",
+        published_at: visible ? new Date().toISOString() : null,
+      })
+      .eq("id", submission.campaign_id)
+      .select("slug")
+      .maybeSingle();
+    if (campaignError || !campaign) {
+      return {
+        ok: false,
+        message: "The public campaign could not be changed.",
+      };
+    }
+    campaignSlug = campaign.slug;
+  }
+
+  const { error: sourceError } = await admin
+    .from("external_campaign_sources")
+    .update({ is_visible: visible && !submission.campaign_id })
+    .eq("official_source_url", submission.public_source_url);
+  if (sourceError) {
+    return {
+      ok: false,
+      message: "The public program listing could not be changed.",
+    };
+  }
+
+  await admin.from("admin_audit_log").insert({
+    actor_user_id: access.userId,
+    action: visible ? "program_restored" : "program_removed",
+    entity_type: submission.campaign_id ? "campaign" : "program_submission",
+    entity_id: submission.campaign_id ?? submission.id,
+    detail: { submission_id: submission.id },
+  });
+  revalidatePath("/");
+  revalidatePath("/campaigns");
+  if (campaignSlug) revalidatePath(`/campaigns/${campaignSlug}`);
+  revalidatePath("/official-sources");
+  revalidatePath("/organizations");
+  revalidatePath("/public-audit");
+  revalidatePath("/admin/programs");
+  revalidatePath(`/admin/programs/${id}`);
+  return {
+    ok: true,
+    message: visible
+      ? "Program restored on the website."
+      : "Program removed from the website. Its records were preserved.",
+  };
+}

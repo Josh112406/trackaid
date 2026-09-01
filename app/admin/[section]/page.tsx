@@ -8,6 +8,7 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
+import { PaymentReconciliationButton } from "@/components/payment-reconciliation-button";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { loadAdminData } from "@/lib/admin-data";
 import { formatDateTime, formatPhp } from "@/lib/format";
@@ -92,6 +93,7 @@ export default async function AdminSectionPage({
           <p>{description}</p>
         </div>
         <div className="admin-top-actions">
+          {section === "transactions" ? <PaymentReconciliationButton /> : null}
           {section === "programs" ? (
             <Link className="primary-button" href="/admin/submissions/new">
               <FilePlus2 size={17} />
