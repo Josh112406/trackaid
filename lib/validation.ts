@@ -59,6 +59,13 @@ export function emailAddress(value: unknown) {
   return email;
 }
 
+export function adminInviteRole(value: unknown) {
+  if (value !== "reviewer" && value !== "auditor") {
+    throw new Error("Choose a valid administrator role.");
+  }
+  return value;
+}
+
 export function httpsUrl(value: unknown, name: string) {
   const input = plainText(value, { min: 9, max: 2048, name });
   let parsed: URL;

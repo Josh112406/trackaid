@@ -5,6 +5,7 @@ import {
   readJsonObject,
   requestClientIdentifier,
 } from "@/lib/security";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerUserClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -51,25 +52,46 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabase = await createServerUserClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+  /* ---- Pre-check: verify the email belongs to an admin ---- */
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return noStoreJson(
+      { message: "Secure sign-in is temporarily unavailable." },
+      { status: 503 },
+    );
+  }
+  const { data: userLookup } = await adminClient.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
   });
-  if (error || !data.user) {
+  const matchedUser = userLookup?.users?.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase(),
+  );
+  if (!matchedUser) {
+    return noStoreJson(
+      { message: "The email or password is incorrect." },
+      { status: 401 },
+    );
+  }
+  const { data: adminRow } = await adminClient
+    .from("app_admins")
+    .select("role")
+    .eq("user_id", matchedUser.id)
+    .maybeSingle();
+  if (!adminRow) {
     return noStoreJson(
       { message: "The email or password is incorrect." },
       { status: 401 },
     );
   }
 
-  const { data: admin } = await supabase
-    .from("app_admins")
-    .select("role")
-    .eq("user_id", data.user.id)
-    .maybeSingle();
-  if (!admin) {
-    await supabase.auth.signOut();
+  /* ---- Only sign in after confirming admin status ---- */
+  const supabase = await createServerUserClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
     return noStoreJson(
       { message: "The email or password is incorrect." },
       { status: 401 },

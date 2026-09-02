@@ -7,8 +7,35 @@ import {
 } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/database.types";
 
-export async function refreshAdminSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export function buildCspHeader(nonce: string) {
+  const isDev = process.env.NODE_ENV === "development";
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+}
+
+export async function refreshAdminSession(
+  request: NextRequest,
+  nonce: string,
+) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+
+  let response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
   const { url, publishableKey } = getSupabasePublicConfig();
 
   const supabase = createServerClient<Database>(url, publishableKey, {
@@ -17,7 +44,9 @@ export async function refreshAdminSession(request: NextRequest) {
       getAll: () => request.cookies.getAll(),
       setAll: (values, headers) => {
         values.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = NextResponse.next({
+          request: { headers: requestHeaders },
+        });
         values.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
@@ -29,6 +58,9 @@ export async function refreshAdminSession(request: NextRequest) {
   });
 
   await supabase.auth.getClaims();
+
+  const cspHeader = buildCspHeader(nonce);
+  response.headers.set("Content-Security-Policy", cspHeader);
   response.headers.set("Referrer-Policy", "no-referrer");
   return response;
 }

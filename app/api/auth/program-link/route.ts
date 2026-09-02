@@ -46,8 +46,13 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createServerUserClient();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (!origin) {
+    return noStoreJson(
+      { message: "The sign-in link could not be sent." },
+      { status: 503 },
+    );
+  }
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {

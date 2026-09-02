@@ -11,6 +11,6 @@ export const supabaseAuthCookieOptions = {
   path: "/",
   sameSite: "lax" as const,
   secure: process.env.NODE_ENV === "production",
-  httpOnly: false,
+  httpOnly: true,
   maxAge: 60 * 60 * 24 * 7,
 };

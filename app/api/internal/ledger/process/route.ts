@@ -25,5 +25,4 @@ async function handleLedgerProcessing(request: Request) {
   return NextResponse.json(result);
 }
 
-export const GET = handleLedgerProcessing;
 export const POST = handleLedgerProcessing;

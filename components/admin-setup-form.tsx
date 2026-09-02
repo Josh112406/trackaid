@@ -59,7 +59,7 @@ export function AdminSetupForm({
 
     if (error) {
       setMessage(
-        "This invitation is invalid, expired, or already used. Request a new owner invitation.",
+        "This invitation is invalid, expired, or already used. Request a new administrator invitation.",
       );
       return;
     }
@@ -84,8 +84,14 @@ export function AdminSetupForm({
         <KeyRound size={30} aria-hidden="true" />
       )}
       <label>
-        Owner email
-        <input value={email} type="email" autoComplete="email" readOnly />
+        Administrator email
+        <input
+          value={email}
+          type="email"
+          autoComplete="email"
+          readOnly
+          required
+        />
       </label>
       <label>
         Create password
@@ -118,7 +124,7 @@ export function AdminSetupForm({
         {loading ? (
           <LoaderCircle className="spin" size={18} aria-hidden="true" />
         ) : null}
-        {ready ? "Check your email" : "Create owner account"}
+        {ready ? "Check your email" : "Create admin account"}
       </button>
       {message ? (
         <p

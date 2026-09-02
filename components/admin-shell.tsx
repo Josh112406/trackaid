@@ -14,6 +14,7 @@ import {
   Landmark,
   ScrollText,
   ShieldCheck,
+  UsersRound,
 } from "lucide-react";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 const items = [
@@ -59,6 +60,15 @@ export function AdminShell({
               {label}
             </Link>
           ))}
+          {role === "owner" ? (
+            <Link
+              className={pathname === "/admin/team" ? "is-active" : undefined}
+              href="/admin/team"
+            >
+              <UsersRound size={17} />
+              Admin team
+            </Link>
+          ) : null}
         </nav>
         <div className="admin-account">
           <span>{role}</span>

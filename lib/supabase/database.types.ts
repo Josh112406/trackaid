@@ -906,6 +906,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_admin_invitation: {
+        Args: {
+          p_email: string;
+          p_expires_at: string;
+          p_role: Database["public"]["Enums"]["app_admin_role"];
+          p_token_hash: string;
+        };
+        Returns: string;
+      };
       consume_security_rate_limit: {
         Args: {
           p_key_hash: string;

@@ -1,3 +1,4 @@
+import { formatPhp } from "@/lib/format";
 import {
   createPayMongoCheckoutSession,
   PayMongoConfigurationError,
@@ -58,7 +59,9 @@ export async function POST(request: Request) {
     );
   const { data: campaign, error } = await admin
     .from("campaigns")
-    .select("id,slug,title,status,organization_id,organizations(status)")
+    .select(
+      "id,slug,title,status,organization_id,funding_goal_centavos,received_centavos,organizations(status)",
+    )
     .eq("id", campaignId)
     .eq("status", "published")
     .eq("is_demonstration", false)
@@ -68,6 +71,24 @@ export async function POST(request: Request) {
       { message: "This campaign is not open for donations." },
       { status: 404 },
     );
+  if (campaign.funding_goal_centavos != null) {
+    const remaining =
+      campaign.funding_goal_centavos - (campaign.received_centavos ?? 0);
+    if (remaining <= 0) {
+      return noStoreJson(
+        { message: "This campaign has reached its funding goal." },
+        { status: 409 },
+      );
+    }
+    if (Number(body.amountCentavos) > remaining) {
+      return noStoreJson(
+        {
+          message: `The maximum remaining amount is ${formatPhp(remaining)}.`,
+        },
+        { status: 400 },
+      );
+    }
+  }
   const organization = campaign.organizations as { status?: string } | null;
   if (organization?.status !== "verified")
     return noStoreJson(
@@ -97,9 +118,13 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   try {
-    const origin =
-      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-      new URL(request.url).origin;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+    if (!origin) {
+      return noStoreJson(
+        { message: "Checkout origin is not configured." },
+        { status: 503 },
+      );
+    }
     const checkout = await createPayMongoCheckoutSession({
       campaignId: campaign.id,
       campaignSlug: campaign.slug,

@@ -32,5 +32,11 @@ export async function getAdminAccess(): Promise<AdminAccess> {
 
 export function safeAdminRedirect(value: string | null) {
   if (!value?.startsWith("/admin") || value.startsWith("//")) return "/admin";
-  return value;
+  try {
+    const parsed = new URL(value, "http://n");
+    if (parsed.pathname.startsWith("/admin")) return parsed.pathname;
+  } catch {
+    /* malformed — fall through */
+  }
+  return "/admin";
 }

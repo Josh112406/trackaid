@@ -61,13 +61,39 @@ export function noStoreJson(
 }
 
 export async function readJsonObject(request: Request, maxBytes: number) {
-  const declaredLength = Number(request.headers.get("content-length") ?? 0);
-  if (declaredLength > maxBytes) throw new Error("REQUEST_TOO_LARGE");
+  const body = request.body;
+  if (!body) throw new Error("NO_BODY");
 
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > maxBytes) {
-    throw new Error("REQUEST_TOO_LARGE");
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) throw new Error("REQUEST_TOO_LARGE");
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
   }
+
+  const merged =
+    chunks.length === 1
+      ? chunks[0]
+      : (() => {
+          const buf = new Uint8Array(totalBytes);
+          let offset = 0;
+          for (const c of chunks) {
+            buf.set(c, offset);
+            offset += c.byteLength;
+          }
+          return buf;
+        })();
+
+  const text = new TextDecoder().decode(merged);
   const parsed: unknown = JSON.parse(text);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error("INVALID_JSON");
