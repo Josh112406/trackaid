@@ -35,11 +35,22 @@
 
 .workflow .card:nth-child(3) {
   background: var(--clay);
+  color: var(--sand);
+}
+
+.workflow .card:nth-child(3) .title,
+.workflow .card:nth-child(3) .description {
+  color: #241a15;
 }
 
 .workflow .card:nth-child(4) {
   border-radius: 16px 32px 16px 32px;
   background: var(--ochre);
+}
+
+.workflow .card:nth-child(4) .title,
+.workflow .card:nth-child(4) .description {
+  color: #261f10;
 }
 
 .workflow .card > .number {

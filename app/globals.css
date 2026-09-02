@@ -105,14 +105,15 @@ h3 {
   font-weight: 650;
   line-height: 1.08;
   letter-spacing: -0.025em;
+  overflow-wrap: break-word;
 }
 
 h1 {
-  font-size: clamp(3rem, 7vw, 6.8rem);
+  font-size: clamp(2.2rem, 6vw, 6.8rem);
 }
 
 h2 {
-  font-size: clamp(2.1rem, 4.3vw, 4.25rem);
+  font-size: clamp(1.8rem, 4vw, 4.25rem);
 }
 
 h3 {
@@ -772,7 +773,7 @@ h3 {
 .how-grid li > span {
   display: block;
   margin-bottom: 70px;
-  color: var(--leaf-pale);
+  color: var(--ink-muted);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -782,8 +783,13 @@ h3 {
 }
 
 .how-grid p {
-  color: var(--leaf-pale);
+  color: var(--ink);
   font-size: 0.9rem;
+}
+
+.how-section .how-grid p,
+.how-section .how-grid li > span {
+  color: var(--leaf-pale);
 }
 
 .audit-timeline {
@@ -864,15 +870,34 @@ h3 {
   text-transform: uppercase;
 }
 
-.status-confirmed {
+.status-confirmed,
+.status-approved,
+.status-paid,
+.status-active,
+.status-healthy {
   background: var(--leaf-pale);
   color: var(--moss);
 }
 
 .status-submitted,
-.status-pending {
-  background: var(--oat);
-  color: var(--earth-dark);
+.status-pending,
+.status-draft,
+.status-needs-information {
+  background: #fff3cd;
+  color: #664d03;
+}
+
+.status-rejected,
+.status-suspended,
+.status-failed,
+.status-disputed {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.status-closed {
+  background: #e2e3e5;
+  color: #41464b;
 }
 
 .audit-metadata {
@@ -1027,8 +1052,9 @@ h3 {
 
 .campaign-hero h1 {
   margin: 22px 0;
-  max-width: 10ch;
-  font-size: clamp(3rem, 5.2vw, 5.6rem);
+  max-width: 22ch;
+  font-size: clamp(2.3rem, 5.2vw, 5.6rem);
+  overflow-wrap: break-word;
 }
 
 .campaign-summary {
@@ -1125,6 +1151,18 @@ h3 {
   border-radius: var(--radius-sm);
   align-items: flex-start;
   gap: 10px;
+}
+
+.evidence-notice svg,
+.directory-safety-note svg,
+.submission-safety-note svg,
+.checkout-banner svg,
+.admin-production-note svg,
+.form-message svg,
+.safety-note svg,
+.brand-mark svg {
+  flex: 0 0 auto;
+  flex-shrink: 0;
 }
 
 .evidence-notice {
@@ -1956,6 +1994,13 @@ body:has(.admin-shell) > .site-footer {
   white-space: nowrap;
 }
 
+.admin-table-wrap th.table-num,
+.admin-table-wrap td.table-num,
+.table-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
 .admin-table-wrap tr:last-child td {
   border-bottom: 0;
 }
@@ -2006,13 +2051,37 @@ body:has(.admin-shell) > .site-footer {
   color: var(--moss);
   font-size: 0.61rem;
   font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .table-status-needs-information,
+.table-status-draft,
+.table-status-pending,
+.table-status-submitted {
+  background: #fff3cd;
+  color: #664d03;
+}
+
+.table-status-rejected,
+.table-status-suspended,
 .table-status-failed {
-  background: #f0d7c8;
-  color: #87472b;
+  background: #f8d7da;
+  color: #842029;
+}
+
+.table-status-approved,
+.table-status-active,
+.table-status-paid,
+.table-status-confirmed,
+.table-status-published {
+  background: #dfe7d6;
+  color: var(--moss);
+}
+
+.table-status-closed {
+  background: #e2e3e5;
+  color: #41464b;
 }
 
 .table-action {
@@ -2209,7 +2278,7 @@ body:has(.admin-shell) > .site-footer {
 }
 
 .health-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
 
 .health-grid article {
@@ -2756,8 +2825,9 @@ body:has(.admin-shell) > .site-footer {
 
   .hero-copy h1 {
     margin: 22px 0 24px;
-    font-size: clamp(2.85rem, 14vw, 3.5rem);
-    line-height: 1.02;
+    font-size: clamp(2.1rem, 9vw, 3.2rem);
+    line-height: 1.05;
+    overflow-wrap: break-word;
   }
 
   .hero-lede {
@@ -2898,7 +2968,35 @@ body:has(.admin-shell) > .site-footer {
   }
 
   .admin-account {
-    display: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px 4px 0;
+    border-top: 1px solid rgb(241 231 214 / 16%);
+    flex-wrap: wrap;
+  }
+
+  .admin-account strong {
+    margin: 0;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-account span {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgb(241 231 214 / 12%);
+  }
+
+  .admin-account a,
+  .admin-account button {
+    margin-top: 0;
   }
 
   .admin-main {
@@ -3008,7 +3106,7 @@ body:has(.admin-shell) > .site-footer {
   display: grid;
   margin: 54px 0;
   gap: 18px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .feature-grid article {
@@ -3018,11 +3116,14 @@ body:has(.admin-shell) > .site-footer {
   background: var(--sage);
 }
 
-.feature-grid article:nth-child(2) {
+.feature-grid article:nth-child(4n + 2) {
   background: var(--oat);
 }
-.feature-grid article:nth-child(3) {
+.feature-grid article:nth-child(4n + 3) {
   background: var(--leaf-pale);
+}
+.feature-grid article:nth-child(4n + 4) {
+  background: color-mix(in srgb, var(--sand) 78%, var(--ochre));
 }
 .feature-grid h2 {
   margin: 46px 0 12px;
@@ -3154,6 +3255,13 @@ body:has(.admin-shell) > .site-footer {
   border: 1px solid color-mix(in srgb, var(--ink) 34%, transparent);
   border-radius: var(--radius-sm);
   grid-template-columns: auto 1fr;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.money-input:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-color: var(--focus);
 }
 
 .money-input > span {
@@ -3171,6 +3279,9 @@ body:has(.admin-shell) > .site-footer {
   background: var(--sand);
   color: var(--ink);
   font: inherit;
+}
+.money-input input:focus-visible {
+  outline: none;
 }
 .checkout-security {
   display: flex;
@@ -3275,6 +3386,12 @@ body:has(.admin-shell) > .site-footer {
   border-radius: 12px;
   background: #fffaf1;
   grid-template-columns: auto 1fr;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.campaign-money-input:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-color: var(--focus);
 }
 .campaign-money-input > span {
   display: grid;
@@ -3285,6 +3402,9 @@ body:has(.admin-shell) > .site-footer {
 .campaign-money-input input {
   border: 0;
   border-radius: 0;
+}
+.campaign-money-input input:focus-visible {
+  outline: none;
 }
 .campaign-publication-form .primary-button {
   justify-self: start;
@@ -3320,9 +3440,15 @@ body:has(.admin-shell) > .site-footer {
   color: #8a352b;
 }
 
+@media (min-width: 981px) {
+  .campaign-content-grid > aside {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+}
+
 @media (max-width: 900px) {
-  .feature-grid,
-  .proof-grid,
   .campaign-publication-card {
     grid-template-columns: 1fr;
   }
@@ -3337,5 +3463,12 @@ body:has(.admin-shell) > .site-footer {
   }
   .campaign-hero h1 {
     max-width: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .feature-grid,
+  .proof-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -85,11 +85,11 @@ export default async function PublicAuditPage() {
             <thead>
               <tr>
                 <th>Campaign</th>
-                <th>Gross</th>
-                <th>Fees</th>
-                <th>Net recipient amount</th>
-                <th>Disbursed</th>
-                <th>Unallocated</th>
+                <th className="table-num">Gross</th>
+                <th className="table-num">Fees</th>
+                <th className="table-num">Net recipient amount</th>
+                <th className="table-num">Disbursed</th>
+                <th className="table-num">Unallocated</th>
               </tr>
             </thead>
             <tbody>
@@ -100,11 +100,19 @@ export default async function PublicAuditPage() {
                       {campaign.title}
                     </Link>
                   </td>
-                  <td>{formatPhp(campaign.receivedCentavos)}</td>
-                  <td>{formatPhp(campaign.processingFeeCentavos)}</td>
-                  <td>{formatPhp(campaign.netReceivedCentavos)}</td>
-                  <td>{formatPhp(campaign.disbursedCentavos)}</td>
-                  <td>
+                  <td className="table-num">
+                    {formatPhp(campaign.receivedCentavos)}
+                  </td>
+                  <td className="table-num">
+                    {formatPhp(campaign.processingFeeCentavos)}
+                  </td>
+                  <td className="table-num">
+                    {formatPhp(campaign.netReceivedCentavos)}
+                  </td>
+                  <td className="table-num">
+                    {formatPhp(campaign.disbursedCentavos)}
+                  </td>
+                  <td className="table-num">
                     {formatPhp(
                       campaign.netReceivedCentavos - campaign.disbursedCentavos,
                     )}

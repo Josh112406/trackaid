@@ -229,7 +229,7 @@ function Transactions({
             <th>Reference</th>
             <th>Campaign</th>
             <th>Type</th>
-            <th>Amount</th>
+            <th className="table-num">Amount</th>
             <th>Status</th>
             <th>Time</th>
           </tr>
