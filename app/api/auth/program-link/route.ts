@@ -51,6 +51,7 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
+      data: { trackaid_account_type: "program_submitter" },
       emailRedirectTo: `${origin.replace(/\/$/, "")}/auth/callback?next=/submit-program`,
     },
   });
