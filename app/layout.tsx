@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Epilogue, Fraunces } from "next/font/google";
 import Link from "next/link";
-import { Menu, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+
+import { MobileNavigation } from "@/components/mobile-navigation";
 
 import "./globals.css";
 
@@ -55,18 +57,7 @@ export default function RootLayout({
               </Link>
             ))}
           </nav>
-          <details className="mobile-navigation">
-            <summary>
-              <Menu size={18} aria-hidden="true" /> Menu
-            </summary>
-            <nav aria-label="Mobile navigation">
-              {publicNavigation.map(([href, label]) => (
-                <Link href={href} key={href}>
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          </details>
+          <MobileNavigation items={publicNavigation} />
         </header>
         {children}
         <footer className="site-footer">
