@@ -5,12 +5,36 @@ import { createHmac } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export function requestClientIdentifier(request: Request) {
-  const forwarded = request.headers
-    .get("x-forwarded-for")
-    ?.split(",")[0]
-    ?.trim();
-  const candidate = forwarded || request.headers.get("x-real-ip") || "unknown";
+  const forwarded = (header: string) =>
+    request.headers.get(header)?.split(",")[0]?.trim();
+  const candidate =
+    forwarded("x-vercel-forwarded-for") ||
+    forwarded("x-forwarded-for") ||
+    forwarded("x-real-ip") ||
+    "unknown";
   return candidate.slice(0, 100);
+}
+
+export function scopedRateLimitIdentifier(...parts: string[]) {
+  return JSON.stringify(parts.map((part) => part.slice(0, 256)));
+}
+
+export function checkoutRateLimitRules(request: Request, campaignId: string) {
+  const clientIdentifier = requestClientIdentifier(request);
+  return {
+    client: {
+      scope: "payment-checkout-client",
+      identifiers: [clientIdentifier],
+      limit: 60,
+      windowSeconds: 600,
+    },
+    campaign: {
+      scope: "payment-checkout-campaign",
+      identifiers: [scopedRateLimitIdentifier(clientIdentifier, campaignId)],
+      limit: 20,
+      windowSeconds: 600,
+    },
+  };
 }
 
 export async function consumeRateLimit({

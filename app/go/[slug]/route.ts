@@ -1,6 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  consumeRateLimit,
+  requestClientIdentifier,
+  scopedRateLimitIdentifier,
+} from "@/lib/security";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { findOfficialSource } from "@/lib/official-sources";
@@ -30,9 +35,17 @@ export async function GET(
   if (!source)
     return NextResponse.redirect(new URL("/campaigns#official", request.url));
 
-  const admin = createAdminClient();
   const sessionToken =
     request.cookies.get("trackaid_session")?.value ?? randomUUID();
+  const analyticsRateLimit = await consumeRateLimit({
+    scope: "external-redirect-analytics",
+    identifiers: [
+      scopedRateLimitIdentifier(requestClientIdentifier(request), slug),
+    ],
+    limit: 10,
+    windowSeconds: 60,
+  });
+  const admin = analyticsRateLimit.allowed ? createAdminClient() : null;
   if (admin) {
     await admin.from("analytics_events").insert({
       event_kind: "external_redirect",

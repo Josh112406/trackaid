@@ -4,10 +4,10 @@ import {
   PayMongoConfigurationError,
 } from "@/lib/paymongo";
 import {
+  checkoutRateLimitRules,
   consumeRateLimit,
   noStoreJson,
   readJsonObject,
-  requestClientIdentifier,
 } from "@/lib/security";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { botSignals, uuid } from "@/lib/validation";
@@ -33,19 +33,15 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const rateLimit = await consumeRateLimit({
-    scope: "payment-checkout",
-    identifiers: [requestClientIdentifier(request), campaignId],
-    limit: 20,
-    windowSeconds: 600,
-  });
-  if (!rateLimit.configured) {
+  const rateLimitRules = checkoutRateLimitRules(request, campaignId);
+  const clientRateLimit = await consumeRateLimit(rateLimitRules.client);
+  if (!clientRateLimit.configured) {
     return noStoreJson(
       { message: "Secure checkout is temporarily unavailable." },
       { status: 503 },
     );
   }
-  if (!rateLimit.allowed) {
+  if (!clientRateLimit.allowed) {
     return noStoreJson(
       { message: "Too many checkout attempts. Try again in 10 minutes." },
       { status: 429 },
@@ -95,6 +91,19 @@ export async function POST(request: Request) {
       { message: "This organization is not verified for donations." },
       { status: 409 },
     );
+  const campaignRateLimit = await consumeRateLimit(rateLimitRules.campaign);
+  if (!campaignRateLimit.configured) {
+    return noStoreJson(
+      { message: "Secure checkout is temporarily unavailable." },
+      { status: 503 },
+    );
+  }
+  if (!campaignRateLimit.allowed) {
+    return noStoreJson(
+      { message: "Too many checkout attempts. Try again in 10 minutes." },
+      { status: 429 },
+    );
+  }
   const { data: destination, error: destinationError } = await admin
     .from("organization_payment_destinations")
     .select("paymongo_merchant_id,status")
